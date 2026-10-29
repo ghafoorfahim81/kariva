@@ -20,8 +20,8 @@ class ActorController extends Controller
         abort_unless($actor->isActive(), 404);
 
         return new ActorResource($actor->load([
-            'category', 'city', 'stats', 'serviceAreas',
-            'services' => fn ($q) => $q->where('status', 'active')->with('category')->orderBy('created_at'),
+            'category', 'city', 'stats', 'serviceAreas', 'media',
+            'services' => fn ($q) => $q->where('status', 'active')->with(['category', 'media'])->orderBy('created_at'),
         ]));
     }
 
@@ -41,7 +41,7 @@ class ActorController extends Controller
             $search->actor($actor->id);
         });
 
-        return new ActorResource($actor->refresh()->load(['category', 'city', 'stats', 'serviceAreas']));
+        return new ActorResource($actor->refresh()->load(['category', 'city', 'stats', 'serviceAreas', 'media']));
     }
 
     /** Cities where the actor works. Replaces the whole list. */

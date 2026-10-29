@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class Actor extends Model
 {
@@ -60,6 +62,29 @@ class Actor extends Model
     public function membershipOf(User $user): ?object
     {
         return DB::table('actor_members')->where(['actor_id' => $this->id, 'user_id' => $user->id])->first();
+    }
+
+    /** Scanned files only; nothing unscanned is ever shown. */
+    public function media(): MorphMany
+    {
+        return $this->morphMany(Media::class, 'model')->where('scan_status', 'clean')->orderBy('sort_order');
+    }
+
+    public function avatarUrl(): ?string
+    {
+        return $this->mediaUrl('avatar');
+    }
+
+    public function coverUrl(): ?string
+    {
+        return $this->mediaUrl('cover');
+    }
+
+    private function mediaUrl(string $collection): ?string
+    {
+        $m = $this->media->firstWhere('collection', $collection);
+
+        return $m ? Storage::disk($m->disk)->url($m->path) : null;
     }
 
     public function isActive(): bool

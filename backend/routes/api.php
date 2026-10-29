@@ -3,7 +3,9 @@
 use App\Http\Controllers\ActorController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ServiceController;
 use Illuminate\Http\Request;
@@ -30,6 +32,7 @@ Route::get('search/actors', [SearchController::class, 'actors'])->middleware('th
 Route::get('actors/{actor}', [ActorController::class, 'show']);
 Route::get('actors/{actor}/services', [ServiceController::class, 'index']);
 Route::get('services/{service}', [ServiceController::class, 'show']);
+Route::get('actors/{actor}/portfolio', [PortfolioController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('me', [AuthController::class, 'me']);
@@ -59,4 +62,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('actors/{actor}/services', [ServiceController::class, 'store']);
     Route::patch('services/{service}', [ServiceController::class, 'update']);
     Route::delete('services/{service}', [ServiceController::class, 'destroy']);
+
+    Route::post('actors/{actor}/portfolio', [PortfolioController::class, 'store']);
+    Route::patch('portfolio/{item}', [PortfolioController::class, 'update']);
+    Route::delete('portfolio/{item}', [PortfolioController::class, 'destroy']);
+
+    Route::post('media', [MediaController::class, 'store'])->middleware('throttle:30,1');
+    Route::delete('media/{media}', [MediaController::class, 'destroy']);
 });

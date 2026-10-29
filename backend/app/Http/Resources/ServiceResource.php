@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class ServiceResource extends JsonResource
 {
@@ -25,6 +26,7 @@ class ServiceResource extends JsonResource
                 'currency' => $this->currency,
                 'unit' => $this->price_unit,
             ],
+            'images' => $this->whenLoaded('media', fn () => $this->media->map(fn ($m) => Storage::disk($m->disk)->url($m->path))->values()),
             'status' => $this->status,
         ];
     }
