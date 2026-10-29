@@ -22,7 +22,7 @@ class SearchActors
     public const MAX_LIMIT = 50;
 
     /** @return array{items: Collection<int, Actor>, next_cursor: ?string} */
-    public function __invoke(?string $q, ?string $category, ?string $city, ?string $cursor, int $limit = self::DEFAULT_LIMIT): array
+    public function __invoke(?string $q, ?string $category, ?string $city, ?string $cursor, int $limit = self::DEFAULT_LIMIT, ?string $type = null): array
     {
         $limit = max(1, min($limit, self::MAX_LIMIT));
 
@@ -38,6 +38,9 @@ class SearchActors
             ->orderByRaw('rank_verified DESC')->orderByRaw('rank_rating DESC')->orderByRaw('rank_completed DESC')->orderBy('actors.id')
             ->with(['category', 'city', 'stats', 'media']);
 
+        if (in_array($type, ['person', 'business'], true)) {
+            $query->where('actors.type', $type);
+        }
         $this->words($query, $q);
         $this->category($query, $category);
         $this->city($query, $city);
