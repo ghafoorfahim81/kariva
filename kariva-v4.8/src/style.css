@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+@tailwind base;@tailwind components;@tailwind utilities;
+:root{font-family:Vazirmatn,Tahoma,sans-serif;font-synthesis:none}html[lang="en"]{font-family:Inter,system-ui,sans-serif}*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}img{display:block}.kariva-shell{background-image:radial-gradient(ellipse 700px 380px at 50% -170px,rgba(59,130,246,.09),transparent)}.dark .kariva-shell{background-image:radial-gradient(ellipse 700px 380px at 50% -170px,rgba(59,130,246,.12),transparent)}
+.card{@apply rounded-[22px] border border-slate-200/80 bg-white shadow-sm dark:border-slate-700/70 dark:bg-[#111c30]}.card{box-shadow:0 7px 28px rgba(21,45,85,.035)}.dark .card{box-shadow:0 8px 32px rgba(0,0,0,.09)}.soft{@apply text-slate-500 dark:text-slate-400}.chip{@apply rounded-full px-4 py-2 text-xs font-bold transition}.chip-on{@apply bg-blue-600 text-white shadow-md shadow-blue-600/20}.chip-off{@apply bg-slate-100 text-slate-600 hover:bg-blue-50 dark:bg-slate-800 dark:text-slate-300}.nav-item{@apply flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition}.nav-on{@apply bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300}.nav-off{@apply text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800}.brand-mark{box-shadow:0 9px 25px rgba(37,99,235,.24)}.brand-wordmark{letter-spacing:-.9px}.premium-header{box-shadow:0 2px 20px rgba(14,35,73,.025)}.hero-premium{background:linear-gradient(118deg,#067fa8 0%,#1665c5 45%,#2145cf 100%);box-shadow:0 18px 48px rgba(33,86,197,.20)}.hero-premium:before{content:'';position:absolute;inset:0;opacity:.14;background-image:radial-gradient(circle at 1px 1px,#fff 1px,transparent 0);background-size:25px 25px;mask-image:linear-gradient(to left,#000,transparent 72%)}.stat-tile{@apply flex flex-col items-center justify-center rounded-2xl border border-slate-200/80 bg-white px-2 py-4 dark:border-slate-700/70 dark:bg-[#111c30]}.stat-value{@apply text-xl font-black tracking-tight text-blue-600 dark:text-blue-400}.stat-label{@apply mt-1 text-center text-[10px] font-semibold text-slate-500 dark:text-slate-400}.post-card{transition:transform .2s ease,box-shadow .2s ease}.post-card:hover{transform:translateY(-2px);box-shadow:0 18px 44px rgba(28,54,99,.09)}.post-photo{aspect-ratio:1.55;object-fit:cover}.professional-card,.opportunity-card{transition:transform .2s ease,border-color .2s ease}.professional-card:hover,.opportunity-card:hover{transform:translateY(-3px);border-color:#93c5fd}.composer-bar{box-shadow:0 6px 24px rgba(30,64,120,.04)}.profile-cover{background-image:radial-gradient(circle at 75% 10%,rgba(255,255,255,.32),transparent 40%),linear-gradient(110deg,#0891b2,#2563eb,#3730a3)}@media(max-width:640px){.hero-premium{border-radius:22px}.stat-tile{padding:12px 4px}.stat-label{font-size:9px}.post-photo{aspect-ratio:1.2}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+.v3-input{width:100%;border:1px solid #cbd5e1;border-radius:13px;padding:12px 14px;background:#f8fafc;outline:none;color:#0f172a}.v3-input:focus{border-color:#2563eb;box-shadow:0 0 0 3px #2563eb18}.v3-primary{display:block;width:100%;background:#2563eb;color:white;font-weight:800;padding:12px 18px;border-radius:13px}.dark .v3-input{background:#1e293b;color:#f8fafc;border-color:#475569}
+
+/* V3.3: predictable native form appearance and theme support */
+:root{color-scheme:light}.dark{color-scheme:dark}
+.v3-input,.v3-input option{background-color:#f8fafc!important;color:#0f172a!important;-webkit-text-fill-color:#0f172a}
+.dark .v3-input,.dark .v3-input option{background-color:#1e293b!important;color:#f8fafc!important;-webkit-text-fill-color:#f8fafc}
+.v3-input::placeholder{color:#64748b;opacity:1}.dark .v3-input::placeholder{color:#94a3b8}
+.review-overlay{height:100dvh;overscroll-behavior:contain}.review-dialog{max-height:calc(100dvh - 24px);overscroll-behavior:contain;scroll-padding-bottom:160px}
+.review-textarea{scroll-margin-bottom:190px;min-height:100px}
+@media(max-width:640px){.review-overlay{align-items:flex-start;padding-top:max(12px,env(safe-area-inset-top));padding-bottom:max(12px,env(safe-area-inset-bottom))}.review-dialog{max-height:calc(100dvh - 24px);-webkit-overflow-scrolling:touch}}
+
+/* V3.4 chat layout */
+.chat-layout{display:grid;grid-template-columns:minmax(220px,34%) minmax(0,1fr);min-height:520px;height:min(70dvh,680px)}.chat-list{overflow-y:auto;border-inline-end:1px solid}.chat-panel{min-width:0;min-height:0;display:flex;flex-direction:column}.chat-messages{min-height:0;background:rgba(148,163,184,.045)}
+@media(max-width:767px){.chat-layout{display:block;height:min(73dvh,650px);min-height:400px;position:relative}.chat-list{height:100%;border:0}.chat-mobile-hidden{display:none}.chat-panel{display:none;height:100%}.chat-panel.chat-mobile-open{display:flex}}
+
+/* V3.4.1 mobile keyboard, service-request modal, and full-size chat media */
+.service-request-overlay{left:0;right:0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.service-request-form{max-height:calc(100% - 16px);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.service-request-submit{position:sticky;bottom:0;z-index:1;min-height:48px}
+@media(max-width:767px){
+ .service-request-overlay{align-items:flex-start;padding:12px 14px}
+ .service-request-form{margin:auto 0;max-height:100%;padding-bottom:16px}
+ .service-request-form textarea{min-height:110px;max-height:22dvh}
+ .chat-layout.chat-keyboard-open{height:min(43dvh,360px);min-height:190px}
+ .chat-layout.chat-keyboard-open .chat-messages{overscroll-behavior:contain}
+ .chat-panel form input{font-size:16px}
+}
+
+@keyframes kariva-spin {to {transform:rotate(360deg)}}
+.kariva-spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:kariva-spin .7s linear infinite}
+
+/* V3.8.2: Consistent public profile header for visitors and owners. */
+.public-profile-cover { height: clamp(170px, 34vw, 240px); overflow: visible; }
+.public-profile-cover > img { width: 100%; height: 100%; object-fit: cover; }
+.public-profile-body { position: relative; }
+.public-profile-avatar { position: relative; z-index: 1; width: 92px; height: 92px; margin-top: -58px; flex-shrink: 0; box-shadow: 0 5px 16px rgba(15,23,42,.12); }
+@media (max-width: 640px) {
+  .public-profile-cover { height: 190px; }
+  .public-profile-avatar { width: 86px; height: 86px; margin-top: -55px; }
+  .public-profile-body { padding-top: 18px; }
+}
+
+/* V4.6: iPhone-safe forms and admin navigation. */
+html,body,#app{max-width:100%;overflow-x:clip}
+main,.card,section{min-width:0}
+.admin-section-nav{-webkit-overflow-scrolling:touch;scrollbar-width:thin;overscroll-behavior-x:contain}
+input,textarea,select{max-width:100%}
+@media(max-width:767px){
+  input:not([type=checkbox]):not([type=radio]),textarea,select{font-size:16px}
+  input,textarea,select{scroll-margin-top:90px;scroll-margin-bottom:190px}
+  .card{max-width:100%}
+  [role=dialog]{max-width:100%;overscroll-behavior:contain}
+  .admin-section-nav button{min-height:44px}
+  .service-request-submit{padding-bottom:max(12px,env(safe-area-inset-bottom))}
+}
