@@ -12,4 +12,8 @@ class Media extends Model
     protected $table = 'media';
 
     protected $guarded = [];
+
+    const UPDATED_AT = null;
+
+    protected $casts = ['purge_at' => 'datetime'];
 }

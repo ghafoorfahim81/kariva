@@ -244,16 +244,21 @@ class IdentityConstraintsTest extends DatabaseTestCase
 
     // ---------------------------------------------------------------- deletion
 
-    public function test_deleting_a_page_needs_a_request_from_the_primary_owner(): void
+    public function test_any_owner_requests_deletion_and_only_the_primary_owner_confirms(): void
     {
         $page = $this->business();
         $coOwner = $this->member($page['actor'], 'owner');
+        $admin = $this->member($page['actor'], 'admin');
+        $request = ['deletion_requested_by' => $coOwner, 'deletion_requested_at' => now()];
 
         $this->assertRejected(fn () => DB::table('actors')->where('id', $page['actor'])->update(['status' => 'deleted']), 'actors_business_delete_needs_request');
-        $this->assertRejected(fn () => DB::table('actors')->where('id', $page['actor'])->update(['deletion_requested_by' => $coOwner, 'deletion_requested_at' => now()]), 'only the primary owner');
+        $this->assertRejected(fn () => DB::table('actors')->where('id', $page['actor'])->update(['deletion_requested_by' => $admin, 'deletion_requested_at' => now()]), 'only an owner');
 
-        DB::table('actors')->where('id', $page['actor'])->update(['deletion_requested_by' => $page['user'], 'deletion_requested_at' => now()]);
-        DB::table('actors')->where('id', $page['actor'])->update(['status' => 'deleted', 'deleted_at' => now()]);
+        DB::table('actors')->where('id', $page['actor'])->update($request);
+        $this->assertRejected(fn () => DB::table('actors')->where('id', $page['actor'])->update(['deletion_confirmed_by' => $coOwner]), 'only the primary owner');
+        $this->assertRejected(fn () => DB::table('actors')->where('id', $page['actor'])->update(['status' => 'deleted']), 'actors_business_delete_needs_request');
+
+        DB::table('actors')->where('id', $page['actor'])->update(['deletion_confirmed_by' => $page['user'], 'status' => 'deleted', 'deleted_at' => now()]);
         $this->assertDatabaseHas('actors', ['id' => $page['actor'], 'status' => 'deleted']);
     }
 

@@ -308,7 +308,7 @@ class MarketConstraintsTest extends DatabaseTestCase
         $page = $this->business();
         $customer = $this->person()['actor'];
         $id = $this->order($customer, $page['actor']);
-        $delete = ['deletion_requested_by' => $page['user'], 'deletion_requested_at' => now()];
+        $delete = ['deletion_requested_by' => $page['user'], 'deletion_requested_at' => now(), 'deletion_confirmed_by' => $page['user']];
 
         foreach (['requested', 'quoted', 'accepted', 'provider_done'] as $status) {
             if ($status !== 'requested') {
@@ -329,7 +329,7 @@ class MarketConstraintsTest extends DatabaseTestCase
         $this->order($page['actor'], $this->person()['actor']);
 
         $this->assertRejected(
-            fn () => DB::table('actors')->where('id', $page['actor'])->update(['deletion_requested_by' => $page['user'], 'deletion_requested_at' => now(), 'status' => 'deleted']),
+            fn () => DB::table('actors')->where('id', $page['actor'])->update(['deletion_requested_by' => $page['user'], 'deletion_requested_at' => now(), 'deletion_confirmed_by' => $page['user'], 'status' => 'deleted']),
             'open orders'
         );
     }
