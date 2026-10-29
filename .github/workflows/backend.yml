@@ -1,0 +1,41 @@
+name: backend
+
+on:
+  push:
+    paths: ['backend/**', '.github/workflows/backend.yml']
+  pull_request:
+    paths: ['backend/**', '.github/workflows/backend.yml']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: kariva
+          POSTGRES_PASSWORD: kariva
+          POSTGRES_DB: kariva_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U kariva" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pgsql, pdo_pgsql, intl, mbstring, redis
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: cp .env.example .env && php artisan key:generate
+      - name: Pint (code style)
+        run: vendor/bin/pint --test
+      - name: Constraint and unit tests (gate of Phase 0)
+        run: php artisan test
+        env:
+          DB_HOST: 127.0.0.1
+          DB_USERNAME: kariva
+          DB_PASSWORD: kariva
