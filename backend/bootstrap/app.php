@@ -1,5 +1,8 @@
 <?php
 
+use App\Exceptions\ApiException;
+use App\Http\Middleware\ResolveActor;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,8 +19,20 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Cookie-based Sanctum for the Vue SPA; tokens are added when the mobile app starts.
         $middleware->statefulApi();
+        $middleware->alias(['actor' => ResolveActor::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Business-rule failures: a stable `code` the client translates, never a sentence.
+        $exceptions->render(function (ApiException $e) {
+            return response()->json(['code' => $e->errorCode, 'message' => $e->errorCode] + $e->context, $e->status);
+        });
+        // Safety net: if a rule that the database enforces slips past validation, answer 422, not 500.
+        $exceptions->render(function (QueryException $e) {
+            $state = $e->errorInfo[0] ?? null;
+            if (in_array($state, ['23505', '23514', '23503', '23502'], true)) {
+                return response()->json(['code' => 'rule_violation', 'message' => 'rule_violation', 'sqlstate' => $state], 422);
+            }
+        });
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
