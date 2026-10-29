@@ -31,6 +31,8 @@ class ActorResource extends JsonResource
             ],
             'service_areas' => $this->whenLoaded('serviceAreas', fn () => CityResource::collection($this->serviceAreas)),
             'services' => $this->whenLoaded('services', fn () => ServiceResource::collection($this->services)),
+            'avatar_url' => $this->whenLoaded('media', fn () => $this->avatarUrl()),
+            'cover_url' => $this->whenLoaded('media', fn () => $this->coverUrl()),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

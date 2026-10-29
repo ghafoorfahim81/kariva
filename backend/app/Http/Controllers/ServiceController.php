@@ -21,13 +21,13 @@ class ServiceController extends Controller
         $all = $request->boolean('all') && $request->user('sanctum')?->can('view', $actor);
 
         return ServiceResource::collection(
-            $actor->services()->with('category')->when(! $all, fn ($q) => $q->where('status', 'active'))->orderBy('created_at')->get()
+            $actor->services()->with(['category', 'media'])->when(! $all, fn ($q) => $q->where('status', 'active'))->orderBy('created_at')->get()
         );
     }
 
     public function show(Request $request, Service $service): ServiceResource
     {
-        $service->load(['category', 'actor']);
+        $service->load(['category', 'actor', 'media']);
         $visible = $service->status === 'active' && $service->actor->isActive();
         abort_unless($visible || $request->user('sanctum')?->can('view', $service->actor), 404);
 

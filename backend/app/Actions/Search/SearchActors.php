@@ -36,7 +36,7 @@ class SearchActors
             ->selectRaw('COALESCE(s.rating_avg, 0) AS rank_rating')
             ->selectRaw('COALESCE(s.completed_count, 0) AS rank_completed')
             ->orderByRaw('rank_verified DESC')->orderByRaw('rank_rating DESC')->orderByRaw('rank_completed DESC')->orderBy('actors.id')
-            ->with(['category', 'city', 'stats']);
+            ->with(['category', 'city', 'stats', 'media']);
 
         $this->words($query, $q);
         $this->category($query, $category);

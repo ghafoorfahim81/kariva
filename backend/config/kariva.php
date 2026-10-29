@@ -19,4 +19,20 @@ return [
 
     // "Invited past job": confirmed by the customer via OTP, capped per provider per month (Asia/Kabul).
     'invited_orders_per_month' => 5,
+
+    'media' => [
+        // Public files go to one disk, private ones (order files, verification documents) to another.
+        'public_disk' => env('MEDIA_PUBLIC_DISK', 'public'),
+        'private_disk' => env('MEDIA_PRIVATE_DISK', 'local'),
+        // noop (development) or clamav (production: needs clamdscan on the server)
+        'scanner' => env('MEDIA_SCANNER', 'noop'),
+
+        // What each collection accepts. Size is checked on the real file, the type on its content, not on its name.
+        'image_types' => ['image/jpeg', 'image/png', 'image/webp'],
+        'collections' => [
+            'actor' => ['avatar' => ['max_kb' => 3072, 'max_count' => 1], 'cover' => ['max_kb' => 5120, 'max_count' => 1]],
+            'service' => ['gallery' => ['max_kb' => 5120, 'max_count' => 8]],
+            'portfolio_item' => ['images' => ['max_kb' => 5120, 'max_count' => 10]],
+        ],
+    ],
 ];

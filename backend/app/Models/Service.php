@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Service extends Model
 {
@@ -21,6 +22,11 @@ class Service extends Model
     public function actor(): BelongsTo
     {
         return $this->belongsTo(Actor::class);
+    }
+
+    public function media(): MorphMany
+    {
+        return $this->morphMany(Media::class, 'model')->where('scan_status', 'clean')->orderBy('sort_order');
     }
 
     public function category(): BelongsTo
