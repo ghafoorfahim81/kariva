@@ -205,6 +205,17 @@ class SearchApiTest extends ApiTestCase
         $this->assertSame([], array_intersect(array_column($first->json('data'), 'id'), array_column($second->json('data'), 'id')));
     }
 
+    public function test_filter_by_type_separates_people_from_businesses(): void
+    {
+        $page = $this->business(null, ['category_id' => DB::table('categories')->where('slug', 'cook')->value('id')]);
+        $person = $this->person([], ['category_id' => DB::table('categories')->where('slug', 'tailor')->value('id')]);
+
+        $this->assertSame([$page['actor']], $this->ids('type=business'));
+        $this->assertSame([$person['actor']], $this->ids('type=person'));
+        $this->assertEqualsCanonicalizing([$page['actor'], $person['actor']], $this->ids());
+        $this->getJson('/api/v1/search/actors?type=company')->assertUnprocessable();
+    }
+
     public function test_a_broken_cursor_is_a_clean_422(): void
     {
         $this->getJson('/api/v1/search/actors?cursor=garbage')->assertUnprocessable()->assertJsonPath('code', 'search.bad_cursor');

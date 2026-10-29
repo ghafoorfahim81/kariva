@@ -49,7 +49,7 @@ Owner: Ghafoor Fahim. Timezone Asia/Kabul. Reference spec: `Kariva_Spec_v3.pdf` 
 ## Roadmap
 0 Foundation (1–2 weeks) → 1 Core (3–4) → 2 Transactions (4–5) → 3 Trust and launch (4–5) → 4 Public rollout, city by city (2–3 months) → 5 Phase 2 web: posts/comments, contracts, disputes → 6 Flutter mobile.
 
-**Current step: Phase 0.** Create the Laravel project and write migrations for all MVP tables with every constraint (unique, partial unique, composite FK, triggers), seed provinces, cities and categories, and write constraint tests. Gate: all constraint tests green.
+**Phase 0 is done** (`docs/PHASE0.md`). **Current step: Phase 1 (Core)**, see `docs/PHASE1.md`: the API for login, actors, pages, team, services, media and search is built and tested, and the prototype is wired to it for login, the 3-step profile, discovery, pages and services. Next: photo uploads in the UI, team and invitation screens, translation keys, then Phase 2 (orders).
 
 ## Working rules
 - Every data constraint in the spec must also exist in a migration, and have a test.

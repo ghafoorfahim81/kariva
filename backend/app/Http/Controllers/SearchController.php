@@ -15,11 +15,12 @@ class SearchController extends Controller
             'q' => ['nullable', 'string', 'max:100'],
             'category' => ['nullable', 'string', 'max:100'],
             'city' => ['nullable', 'uuid'],
+            'type' => ['nullable', 'in:person,business'],
             'cursor' => ['nullable', 'string', 'max:300'],
             'limit' => ['nullable', 'integer', 'min:1', 'max:'.SearchActors::MAX_LIMIT],
         ]);
 
-        $result = $search($data['q'] ?? null, $data['category'] ?? null, $data['city'] ?? null, $data['cursor'] ?? null, (int) ($data['limit'] ?? SearchActors::DEFAULT_LIMIT));
+        $result = $search($data['q'] ?? null, $data['category'] ?? null, $data['city'] ?? null, $data['cursor'] ?? null, (int) ($data['limit'] ?? SearchActors::DEFAULT_LIMIT), $data['type'] ?? null);
 
         return response()->json([
             'data' => ActorResource::collection($result['items']),
