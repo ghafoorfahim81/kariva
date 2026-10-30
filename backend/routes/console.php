@@ -10,3 +10,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::job(new PurgeMedia)->dailyAt('03:00')->timezone(config('kariva.display_timezone'));
+
+// Time-based rules of the order flow. Hourly is precise enough for waits of days.
+Schedule::command('orders:expire')->hourly()->withoutOverlapping();
+Schedule::command('orders:auto-complete')->hourly()->withoutOverlapping();
+Schedule::command('needs:expire')->hourly()->withoutOverlapping();
