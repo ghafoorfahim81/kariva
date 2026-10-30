@@ -80,3 +80,34 @@ export interface Me {
   status: string
   actors: MyActor[]
 }
+
+export type Role = 'owner' | 'admin' | 'editor' | 'viewer'
+
+export interface Member {
+  user_id: string
+  display_name: string | null
+  role: Role
+  is_primary: boolean
+  /** Only managers see phone numbers. */
+  phone: string | null
+}
+
+export interface Invitation {
+  id: string
+  actor_id: string
+  kind: 'member' | 'transfer_primary'
+  role: Role
+  status: string
+  expires_at: string
+  phone?: string
+  actor?: { id: string; display_name: string; type: string }
+}
+
+export interface PortfolioItem {
+  id: string
+  actor_id: string
+  service_id: string | null
+  title: string
+  description: string | null
+  images: string[]
+}

@@ -1,5 +1,5 @@
 import { del, get, patch, post, put, api } from './client'
-import type { Actor, Category, Me, Province, Service } from './types'
+import type { Actor, Category, Invitation, Me, Member, PortfolioItem, Province, Role, Service } from './types'
 
 export const auth = {
   sendOtp: (phone: string) => post<void>('/auth/otp', { phone }),
@@ -60,4 +60,29 @@ export const media = {
     return api<{ id: string; scan_status: string; url: string | null }>('POST', '/media', { form })
   },
   remove: (id: string) => del<void>(`/media/${id}`),
+  /** Removes the avatar or cover of an actor. */
+  removeSlot: (actorId: string, collection: 'avatar' | 'cover') => del<void>(`/actors/${actorId}/photos/${collection}`),
+}
+
+export const team = {
+  members: (actorId: string) => get<{ data: Member[] }>(`/actors/${actorId}/members`).then((r) => r.data),
+  setRole: (actorId: string, userId: string, role: Role) => patch<void>(`/actors/${actorId}/members/${userId}`, { role }),
+  remove: (actorId: string, userId: string) => del<void>(`/actors/${actorId}/members/${userId}`),
+  invitations: (actorId: string) => get<{ data: Invitation[] }>(`/actors/${actorId}/invitations`).then((r) => r.data),
+  invite: (actorId: string, phone: string, role: Role, kind: 'member' | 'transfer_primary' = 'member') =>
+    post<Invitation>(`/actors/${actorId}/invitations`, { phone, role, kind }),
+  cancelInvitation: (actorId: string, id: string) => del<void>(`/actors/${actorId}/invitations/${id}`),
+  mine: () => get<{ data: Invitation[] }>('/invitations').then((r) => r.data),
+  respond: (id: string, accept: boolean) => post<Invitation>(`/invitations/${id}/respond`, { accept }),
+  requestDeletion: (actorId: string) => post<void>(`/actors/${actorId}/deletion-request`),
+  cancelDeletion: (actorId: string) => del<void>(`/actors/${actorId}/deletion-request`),
+  confirmDeletion: (actorId: string) => post<void>(`/actors/${actorId}/deletion-confirm`),
+}
+
+export const portfolio = {
+  list: (actorId: string) => get<{ data: PortfolioItem[] }>(`/actors/${actorId}/portfolio`).then((r) => r.data),
+  create: (actorId: string, input: { title: string; description?: string | null; service_id?: string | null }) =>
+    post<PortfolioItem>(`/actors/${actorId}/portfolio`, input),
+  update: (id: string, input: { title?: string; description?: string | null }) => patch<PortfolioItem>(`/portfolio/${id}`, input),
+  remove: (id: string) => del<void>(`/portfolio/${id}`),
 }
