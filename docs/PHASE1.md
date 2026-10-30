@@ -37,6 +37,7 @@ Run both:
 
 ```sh
 cd backend && php artisan serve                # set OTP_FAKE_CODE=123456 in .env for local login
+cd backend && php artisan queue:work           # scans uploaded photos
 cd kariva-v4.8 && npm ci && npm run dev
 ```
 
@@ -44,16 +45,25 @@ cd kariva-v4.8 && npm ci && npm run dev
 
 Orders, quotes, needs and offers, chat, notifications, reviews, admin panel, posts. They keep their demo data until Phase 2 and are not connected to the server.
 
-## Not done yet in Phase 1 (next small steps)
+## Done in the UI (second part of Phase 1)
 
-- Avatar, cover, gallery and work-sample photos in the UI still use local previews; the upload API is ready and tested.
-- Team and invitation screens (API ready and tested).
-- Service edit and archive buttons, work-sample screens.
-- Translation keys for the new texts (Pashto and English are partly missing), UUID leftovers in demo data, removing old tabs.
+- Avatar and cover upload for the person and for each page (crop editor, then the real upload; removal by slot).
+- Service photo, service edit and archive; work samples with up to 10 photos.
+- Team screen: members, roles, invite by phone, pending invitations, accept or decline, leave, primary-ownership transfer, deletion request and confirmation.
+- Photos in discovery cards.
+
+## Still open
+
+- Translation keys for some new texts (Pashto and English are partly missing), UUID leftovers in demo data, removing old tabs.
 - The "services" and "work" discovery tabs still show prototype samples.
+- Orders, needs, chat, notifications, reviews, admin: Phase 2 onward.
 
-## Assumptions to confirm
+## Development note: the queue worker
 
-1. The phone limit per IP defaults to 3 as in the spec; carriers share IPs, so you may want a higher number.
-2. A person profile needs a profession (or one active service) to appear in search.
-3. Public profiles show the call and WhatsApp numbers to everyone, as the product idea needs.
+Uploads are scanned by a queued job and shown only after the scan marks them clean. In development run `php artisan queue:work` (or set `QUEUE_CONNECTION=sync`), otherwise photos stay "pending" and are not shown. In production run the worker under Supervisor and set `MEDIA_SCANNER=clamav`.
+
+## Decisions (confirmed by Ghafoor)
+
+1. The OTP limit per IP stays at 3 per hour, as in the spec (`OTP_MAX_SENDS_PER_IP`, tunable later if shared carrier IPs cause trouble).
+2. A profile appears in search only when it has a profession or an active service.
+3. Public profiles show the call and WhatsApp numbers to everyone.

@@ -41,6 +41,23 @@ class MediaController extends Controller
         ], 201);
     }
 
+    /** Removes the avatar or cover of a page or profile without the client needing the media id. */
+    public function destroySlot(Actor $actor, string $collection): JsonResponse
+    {
+        abort_unless(in_array($collection, ['avatar', 'cover'], true), 404);
+        $this->authorize('update', $actor);
+
+        DB::transaction(function () use ($actor, $collection) {
+            $rows = DB::table('media')->where(['model_type' => 'actor', 'model_id' => $actor->id, 'collection' => $collection]);
+            foreach ((clone $rows)->get() as $m) {
+                Storage::disk($m->disk)->delete($m->path);
+            }
+            $rows->delete();
+        });
+
+        return response()->json(null, 204);
+    }
+
     public function destroy(Request $request, Media $media): JsonResponse
     {
         $owner = match ($media->model_type) {
