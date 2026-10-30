@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\NeedController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\SearchController;
@@ -34,6 +35,8 @@ Route::get('actors/{actor}', [ActorController::class, 'show']);
 Route::get('actors/{actor}/services', [ServiceController::class, 'index']);
 Route::get('services/{service}', [ServiceController::class, 'show']);
 Route::get('actors/{actor}/portfolio', [PortfolioController::class, 'index']);
+Route::get('needs', [NeedController::class, 'index']);
+Route::get('needs/{need}', [NeedController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('me', [AuthController::class, 'me']);
@@ -67,6 +70,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('actors/{actor}/portfolio', [PortfolioController::class, 'store']);
     Route::patch('portfolio/{item}', [PortfolioController::class, 'update']);
     Route::delete('portfolio/{item}', [PortfolioController::class, 'destroy']);
+
+    // Needs and offers: acting as the actor in X-Actor-Id.
+    Route::middleware('actor')->group(function () {
+        Route::get('my/needs', [NeedController::class, 'mine']);
+        Route::post('needs', [NeedController::class, 'store']);
+        Route::post('needs/{need}/close', [NeedController::class, 'close']);
+        Route::get('needs/{need}/offers', [NeedController::class, 'offers']);
+        Route::post('needs/{need}/offers', [NeedController::class, 'offer']);
+        Route::post('offers/{offer}/withdraw', [NeedController::class, 'withdraw']);
+        Route::post('offers/{offer}/reject', [NeedController::class, 'rejectOffer']);
+        Route::post('offers/{offer}/accept', [NeedController::class, 'acceptOffer']);
+    });
 
     // Orders: always as the actor in X-Actor-Id.
     Route::middleware('actor')->group(function () {

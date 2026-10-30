@@ -21,6 +21,8 @@ return [
     'invited_orders_per_month' => 5,
 
     // Order timing. The spec proposes these values; Ghafoor had no other preference, so they are the defaults.
+    'needs_lifetime_days' => (int) env('NEED_LIFETIME_DAYS', 30),
+
     'orders' => [
         'expire_requested_hours' => (int) env('ORDER_EXPIRE_REQUESTED_HOURS', 72),   // provider never answered
         'expire_quoted_days' => (int) env('ORDER_EXPIRE_QUOTED_DAYS', 7),            // customer never accepted the price

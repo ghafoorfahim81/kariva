@@ -57,17 +57,39 @@ class OrderFlow
                 'status' => 'requested',
             ]);
 
-            $conversation = (string) Str::uuid();
-            DB::table('conversations')->insert(['id' => $conversation, 'order_id' => $order->id]);
-            foreach ([$customer->id, $provider->id] as $actorId) {
-                DB::table('conversation_participants')->insert(['conversation_id' => $conversation, 'actor_id' => $actorId]);
-            }
+            $this->openConversation($order);
 
             $this->event($order, 'created', $customer, null, 'requested');
             Notifier::actor($provider->id, 'order.requested', "order:{$order->id}:requested", $this->payload($order, $customer));
 
             return $order->refresh();
         });
+    }
+
+    /**
+     * Accepting an offer on a service need starts the order straight in "accepted": the offer already carries the price.
+     * Called inside the transaction of OfferFlow::accept, which has locked the need and the offer.
+     */
+    public function startFromOffer(Actor $customer, Actor $provider, object $need, object $offer): Order
+    {
+        $order = Order::create([
+            'origin' => 'offer',
+            'customer_actor_id' => $customer->id,
+            'provider_actor_id' => $provider->id,
+            'need_id' => $need->id,
+            'offer_id' => $offer->id,
+            'title_snapshot' => $need->title,
+            'description' => $need->description,
+            'status' => 'accepted',
+            'agreed_amount' => $offer->amount,
+            'currency' => $offer->currency,
+            'price_unit' => $offer->price_unit,
+        ]);
+        $this->openConversation($order);
+        $this->event($order, 'created_from_offer', $customer, null, 'accepted', ['offer_id' => $offer->id, 'need_id' => $need->id]);
+        Notifier::actor($provider->id, 'offer.accepted', "offer:{$offer->id}:accepted", $this->payload($order, $customer));
+
+        return $order->refresh();
     }
 
     /** The provider names a price. A newer quote replaces the pending one. */
@@ -169,6 +191,15 @@ class OrderFlow
     }
 
     // ---------------------------------------------------------------- internals
+
+    private function openConversation(Order $order): void
+    {
+        $conversation = (string) Str::uuid();
+        DB::table('conversations')->insert(['id' => $conversation, 'order_id' => $order->id]);
+        foreach ([$order->customer_actor_id, $order->provider_actor_id] as $actorId) {
+            DB::table('conversation_participants')->insert(['conversation_id' => $conversation, 'actor_id' => $actorId]);
+        }
+    }
 
     private function complete(Order $o, ?Actor $by, string $event): void
     {
