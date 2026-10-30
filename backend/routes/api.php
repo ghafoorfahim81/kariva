@@ -3,9 +3,11 @@
 use App\Http\Controllers\ActorController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NeedController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ReviewController;
@@ -98,7 +100,19 @@ Route::middleware('auth:sanctum')->group(function () {
         }
     });
 
+    // Chat, as the acting actor.
+    Route::middleware('actor')->group(function () {
+        Route::get('conversations', [ConversationController::class, 'index']);
+        Route::post('conversations/direct', [ConversationController::class, 'direct']);
+        Route::get('conversations/{conversation}/messages', [ConversationController::class, 'messages']);
+        Route::post('conversations/{conversation}/messages', [ConversationController::class, 'send'])->middleware('throttle:60,1');
+        Route::post('conversations/{conversation}/read', [ConversationController::class, 'read']);
+    });
+
     // Per user (no actor needed).
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::post('notifications/read-all', [NotificationController::class, 'readAll']);
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'read']);
     Route::post('reports', [TrustController::class, 'report'])->middleware('throttle:20,1');
     Route::get('favorites', [TrustController::class, 'favorites']);
     Route::put('favorites/{type}/{id}', [TrustController::class, 'addFavorite']);
