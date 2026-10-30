@@ -49,7 +49,7 @@ Owner: Ghafoor Fahim. Timezone Asia/Kabul. Reference spec: `Kariva_Spec_v3.pdf` 
 ## Roadmap
 0 Foundation (1–2 weeks) → 1 Core (3–4) → 2 Transactions (4–5) → 3 Trust and launch (4–5) → 4 Public rollout, city by city (2–3 months) → 5 Phase 2 web: posts/comments, contracts, disputes → 6 Flutter mobile.
 
-**Phase 0 and Phase 1 are done** (`docs/PHASE0.md`, `docs/PHASE1.md`). **Phase 2 (Transactions) is done** (`docs/PHASE2.md`): orders, quotes, needs and offers, reviews, chat, notifications, the past-job flow, with API and web screens. **Next: Phase 3 (Trust and launch)**: identity verification, reports handling and the admin panel, push-free monitoring, security hardening, deploy on Ubuntu/Nginx, then the closed test with 20 real specialists in one city.
+**Phase 0 and Phase 1 are done** (`docs/PHASE0.md`, `docs/PHASE1.md`). **Phase 2 (Transactions) is done** (`docs/PHASE2.md`): orders, quotes, needs and offers, reviews, chat, notifications, the past-job flow, with API and web screens. **Phase 3 (Trust and launch) is built** (`docs/PHASE3.md`, `docs/DEPLOY.md`, `docs/LAUNCH_CHECKLIST.md`): identity verification, admin panel and API, security hardening, health checks, backups, real OTP gateway, preflight, deploy files. **Next: the real deploy and the closed test with 20 specialists in one city** (needs from Ghafoor: OTP provider, domain, offsite backup disk), then Phase 4.
 
 ## Working rules
 - Every data constraint in the spec must also exist in a migration, and have a test.

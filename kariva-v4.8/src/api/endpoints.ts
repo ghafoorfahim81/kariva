@@ -51,7 +51,7 @@ export const services = {
 }
 
 export const media = {
-  upload: (modelType: 'actor' | 'service' | 'portfolio_item', modelId: string, collection: string, file: File) => {
+  upload: (modelType: 'actor' | 'service' | 'portfolio_item' | 'verification_request', modelId: string, collection: string, file: File) => {
     const form = new FormData()
     form.set('model_type', modelType)
     form.set('model_id', modelId)
@@ -146,4 +146,81 @@ export const trust = {
   favorites: () => get<{ data: { type: string; id: string }[] }>('/favorites').then((r) => r.data),
   addFavorite: (type: 'actor' | 'service' | 'need', id: string) => put<unknown>(`/favorites/${type}/${id}`),
   removeFavorite: (type: 'actor' | 'service' | 'need', id: string) => del<void>(`/favorites/${type}/${id}`),
+}
+
+export interface VerificationState {
+  verified: boolean
+  request: { id: string; kind: string; status: 'pending' | 'approved' | 'rejected'; note: string | null; documents: number; created_at: string; reviewed_at: string | null } | null
+}
+
+export const verification = {
+  get: () => get<VerificationState>('/verification'),
+  request: () => post<{ id: string }>('/verification'),
+}
+
+type AdminPage<T> = { data: T[]; next_cursor: string | null }
+
+export interface AdminVerification {
+  id: string
+  status: string
+  kind: string
+  actor: { id: string; display_name: string; type: string }
+  requester_phone: string | null
+  documents: { id: string; mime: string; size: number; scan_status: string }[]
+  note: string | null
+  created_at: string
+}
+export interface AdminReport {
+  id: string
+  status: string
+  type: 'actor' | 'service' | 'review' | 'message'
+  subject: { title: string | null; text: string | null; actor_id: string } | null
+  reason: string
+  details: string | null
+  reporter_phone: string | null
+  created_at: string
+}
+export interface AdminActor {
+  id: string
+  type: string
+  display_name: string
+  status: string
+  verified: boolean
+  phone: string | null
+  user_id: string | null
+  user_status: string | null
+}
+export interface AdminOverview {
+  users: number
+  actors: { person: number; business: number }
+  verified_actors: number
+  pending_verifications: number
+  open_reports: number
+  suspended_actors: number
+  orders_last_7_days: number
+  completed_orders: number
+  open_needs: number
+}
+export interface AuditRow {
+  id: string
+  action: string
+  created_at: string
+  meta: Record<string, unknown> | null
+}
+
+export const admin = {
+  overview: () => get<AdminOverview>('/admin/overview'),
+  verifications: (cursor?: string | null) => get<AdminPage<AdminVerification>>('/admin/verifications', { cursor }),
+  approve: (id: string, note?: string) => post<AdminVerification>(`/admin/verifications/${id}/approve`, { note }),
+  reject: (id: string, note: string) => post<AdminVerification>(`/admin/verifications/${id}/reject`, { note }),
+  reports: (cursor?: string | null) => get<AdminPage<AdminReport>>('/admin/reports', { cursor }),
+  resolve: (id: string, action?: string, note?: string) => post<AdminReport>(`/admin/reports/${id}/resolve`, { action, note }),
+  dismiss: (id: string, note?: string) => post<AdminReport>(`/admin/reports/${id}/dismiss`, { note }),
+  actors: (q: string, cursor?: string | null) => get<AdminPage<AdminActor>>('/admin/actors', { q, cursor }),
+  suspendActor: (id: string) => post<{ status: string }>(`/admin/actors/${id}/suspend`),
+  unsuspendActor: (id: string) => post<{ status: string }>(`/admin/actors/${id}/unsuspend`),
+  suspendUser: (id: string) => post<{ status: string }>(`/admin/users/${id}/suspend`),
+  unsuspendUser: (id: string) => post<{ status: string }>(`/admin/users/${id}/unsuspend`),
+  audit: (cursor?: string | null) => get<AdminPage<AuditRow>>('/admin/audit-logs', { cursor }),
+  health: () => get<{ status: string; checks: Record<string, { ok: boolean }> }>('/admin/health'),
 }
