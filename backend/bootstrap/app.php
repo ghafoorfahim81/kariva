@@ -1,6 +1,8 @@
 <?php
 
 use App\Exceptions\ApiException;
+use App\Http\Middleware\EnsureAdmin;
+use App\Http\Middleware\EnsureUserActive;
 use App\Http\Middleware\ResolveActor;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
@@ -19,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Cookie-based Sanctum for the Vue SPA; tokens are added when the mobile app starts.
         $middleware->statefulApi();
-        $middleware->alias(['actor' => ResolveActor::class]);
+        $middleware->alias(['actor' => ResolveActor::class, 'admin' => EnsureAdmin::class, 'active' => EnsureUserActive::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Business-rule failures: a stable `code` the client translates, never a sentence.

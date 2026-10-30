@@ -20,6 +20,9 @@ return [
     // "Invited past job": confirmed by the customer via OTP, capped per provider per month (Asia/Kabul).
     'invited_orders_per_month' => 5,
 
+    // Identity documents are deleted this many days after an admin decides (spec: private, with a purge date).
+    'verification_files_days' => (int) env('VERIFICATION_FILES_DAYS', 30),
+
     // Order timing. The spec proposes these values; Ghafoor had no other preference, so they are the defaults.
     // Ready-made review labels (translated in the client).
     'review_tags' => ['on_time', 'clean', 'honest', 'skilled', 'polite', 'fair_price'],
@@ -45,6 +48,8 @@ return [
             'actor' => ['avatar' => ['max_kb' => 3072, 'max_count' => 1], 'cover' => ['max_kb' => 5120, 'max_count' => 1]],
             'service' => ['gallery' => ['max_kb' => 5120, 'max_count' => 8]],
             'portfolio_item' => ['images' => ['max_kb' => 5120, 'max_count' => 10]],
+            // Identity document photos: private disk, never public, deleted some days after the decision.
+            'verification_request' => ['document' => ['max_kb' => 6144, 'max_count' => 4, 'private' => true]],
         ],
     ],
 ];
