@@ -19,6 +19,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'locale' => $this->locale,
             'status' => $this->status,
+            'is_admin' => (bool) $this->is_platform_admin,
             'actors' => $this->actors->map(fn ($actor) => [
                 'id' => $actor->id,
                 'type' => $actor->type,

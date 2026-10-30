@@ -44,6 +44,12 @@ class ActorPolicy
         return $actor->type === 'business' && $this->isPrimary($user, $actor);
     }
 
+    /** Ask for the verified badge and upload identity documents: an owner of the actor. */
+    public function requestVerification(User $user, Actor $actor): bool
+    {
+        return $this->roleIn($user, $actor, ['owner']);
+    }
+
     public function transferPrimary(User $user, Actor $actor): bool
     {
         return $actor->type === 'business' && $this->isPrimary($user, $actor);

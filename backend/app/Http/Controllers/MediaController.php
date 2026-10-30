@@ -8,6 +8,7 @@ use App\Models\Actor;
 use App\Models\Media;
 use App\Models\PortfolioItem;
 use App\Models\Service;
+use App\Models\VerificationRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +20,7 @@ class MediaController extends Controller
     public function store(Request $request, StoreMedia $store): JsonResponse
     {
         $data = $request->validate([
-            'model_type' => ['required', Rule::in(['actor', 'service', 'portfolio_item'])],
+            'model_type' => ['required', Rule::in(['actor', 'service', 'portfolio_item', 'verification_request'])],
             'model_id' => ['required', 'uuid'],
             'collection' => ['required', 'string', 'max:30'],
             'file' => ['required', 'file'],
@@ -37,7 +38,8 @@ class MediaController extends Controller
             'id' => $media->id,
             'collection' => $media->collection,
             'scan_status' => $status,
-            'url' => $status === 'clean' ? Storage::disk($media->disk)->url($media->path) : null,
+            // private files (identity documents) never get a URL
+            'url' => $status === 'clean' && $media->visibility === 'public' ? Storage::disk($media->disk)->url($media->path) : null,
         ], 201);
     }
 
@@ -64,10 +66,11 @@ class MediaController extends Controller
             'actor' => Actor::find($media->model_id),
             'service' => Service::find($media->model_id)?->actor,
             'portfolio_item' => PortfolioItem::find($media->model_id)?->actor,
+            'verification_request' => VerificationRequest::where('status', 'pending')->find($media->model_id)?->actor,
             default => null,
         };
         abort_unless($owner, 404);
-        $this->authorize('update', $owner);
+        $this->authorize($media->model_type === 'verification_request' ? 'requestVerification' : 'update', $owner);
 
         Storage::disk($media->disk)->delete($media->path);
         $media->delete();

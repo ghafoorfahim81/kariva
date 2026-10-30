@@ -129,7 +129,7 @@ class MediaApiTest extends ApiTestCase
         $this->upload($me['user'], 'actor', (string) Str::uuid(), 'avatar')->assertNotFound();
         $this->upload($me['user'], 'actor', $me['actor'], 'banner')->assertUnprocessable()->assertJsonPath('code', 'media.collection_unsupported');
         $this->upload($me['user'], 'order', $me['actor'], 'attachments')->assertUnprocessable();
-        $this->upload($me['user'], 'verification_request', $me['actor'], 'document')->assertUnprocessable();
+        $this->upload($me['user'], 'verification_request', $me['actor'], 'document')->assertNotFound();   // not a verification request
     }
 
     public function test_a_service_gallery_holds_eight_photos(): void

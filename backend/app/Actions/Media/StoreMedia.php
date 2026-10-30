@@ -9,6 +9,7 @@ use App\Models\Media;
 use App\Models\PortfolioItem;
 use App\Models\Service;
 use App\Models\User;
+use App\Models\VerificationRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -25,7 +26,12 @@ class StoreMedia
             ?? throw new ApiException('media.collection_unsupported', 422);
 
         $owner = $this->owningActor($modelType, $modelId);
-        Gate::forUser($user)->authorize('update', $owner);
+        // identity documents: only an owner of the actor, and only while the request is waiting for review
+        $private = ! empty($rules['private']);
+        Gate::forUser($user)->authorize($modelType === 'verification_request' ? 'requestVerification' : 'update', $owner);
+        if ($modelType === 'verification_request' && VerificationRequest::findOrFail($modelId)->status !== 'pending') {
+            throw new ApiException('verification.not_pending', 409);
+        }
 
         $mime = $file->getMimeType();   // detected from the content
         if (! in_array($mime, config('kariva.media.image_types'), true)) {
@@ -35,10 +41,10 @@ class StoreMedia
             throw new ApiException('media.too_large', 422, ['max_kb' => $rules['max_kb']]);
         }
 
-        $disk = config('kariva.media.public_disk');   // every supported collection is public
+        $disk = config($private ? 'kariva.media.private_disk' : 'kariva.media.public_disk');   // documents never go to the public disk
         $path = "$modelType/$modelId/".Str::uuid().'.'.self::EXTENSIONS[$mime];
 
-        return DB::transaction(function () use ($user, $modelType, $modelId, $collection, $file, $rules, $disk, $path, $mime) {
+        return DB::transaction(function () use ($user, $modelType, $modelId, $collection, $file, $rules, $disk, $path, $mime, $private) {
             // one upload at a time per slot, so the count/replace below cannot race
             DB::select('select pg_advisory_xact_lock(hashtextextended(?, 0))', ["media:$modelType:$modelId:$collection"]);
             $existing = DB::table('media')->where(['model_type' => $modelType, 'model_id' => $modelId, 'collection' => $collection]);
@@ -59,7 +65,7 @@ class StoreMedia
                 'model_type' => $modelType,
                 'model_id' => $modelId,
                 'collection' => $collection,
-                'visibility' => 'public',
+                'visibility' => $private ? 'private' : 'public',
                 'disk' => $disk,
                 'path' => $path,
                 'mime' => $mime,
@@ -80,6 +86,7 @@ class StoreMedia
             'actor' => Actor::findOrFail($modelId),
             'service' => Service::with('actor')->findOrFail($modelId)->actor,
             'portfolio_item' => PortfolioItem::with('actor')->findOrFail($modelId)->actor,
+            'verification_request' => VerificationRequest::with('actor')->findOrFail($modelId)->actor,
             default => throw new ApiException('media.collection_unsupported', 422),
         };
     }
