@@ -3,15 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Orders\OrderFlow;
-use App\Exceptions\ApiException;
 use App\Http\Requests\QuoteRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Actor;
 use App\Models\Order;
+use App\Support\Cursor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /** All routes run as the actor named in X-Actor-Id (middleware `actor`). Policies decide from actor_members. */
@@ -45,7 +44,7 @@ class OrderController extends Controller
             ->orderByDesc('created_at')->orderByDesc('id');
 
         if (! empty($data['cursor'])) {
-            [$at, $id] = $this->decodeCursor($data['cursor']);
+            [$at, $id] = Cursor::decode($data['cursor'], 'orders.bad_cursor');
             $query->where(fn ($q) => $q->where('created_at', '<', $at)->orWhere(fn ($q) => $q->where('created_at', $at)->where('id', '<', $id)));
         }
 
@@ -55,7 +54,7 @@ class OrderController extends Controller
 
         return response()->json([
             'data' => OrderResource::collection($items),
-            'next_cursor' => $rows->count() > $limit && $last ? $this->encodeCursor($last) : null,
+            'next_cursor' => $rows->count() > $limit && $last ? Cursor::encode($last->created_at, $last->id) : null,
         ]);
     }
 
@@ -149,21 +148,5 @@ class OrderController extends Controller
     private function resource(Request $request, Order $order): OrderResource
     {
         return new OrderResource($order->load(['customer', 'provider', 'pendingQuote', 'quotes', 'events', 'conversation', 'review']));
-    }
-
-    private function encodeCursor(Order $o): string
-    {
-        return rtrim(strtr(base64_encode(json_encode([$o->created_at->format('Y-m-d H:i:s.uP'), $o->id])), '+/', '-_'), '=');
-    }
-
-    /** @return array{string, string} */
-    private function decodeCursor(string $cursor): array
-    {
-        $parts = json_decode((string) base64_decode(strtr($cursor, '-_', '+/'), true), true);
-        if (! is_array($parts) || count($parts) !== 2 || ! Str::isUuid((string) $parts[1]) || strtotime((string) $parts[0]) === false) {
-            throw new ApiException('orders.bad_cursor', 422);
-        }
-
-        return [$parts[0], $parts[1]];
     }
 }
