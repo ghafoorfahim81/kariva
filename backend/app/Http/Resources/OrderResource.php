@@ -32,6 +32,7 @@ class OrderResource extends JsonResource
             ])->values()),
             'conversation_id' => $this->whenLoaded('conversation', fn () => $this->conversation?->id),
             'review' => $this->whenLoaded('review', fn () => $this->review ? ['id' => $this->review->id, 'stars' => $this->review->stars] : null),
+            'code_sent' => $this->when($this->getAttribute('code_sent') !== null, fn () => $this->getAttribute('code_sent')),
             'created_at' => $this->created_at?->toIso8601String(),
             'completed_at' => $this->completed_at?->toIso8601String(),
         ];
