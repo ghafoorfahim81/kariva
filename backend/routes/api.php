@@ -1,9 +1,13 @@
 <?php
 
 use App\Http\Controllers\ActorController;
+use App\Http\Controllers\Admin\ModerationController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\VerificationReviewController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NeedController;
@@ -14,6 +18,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\TrustController;
+use App\Http\Controllers\VerificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +28,9 @@ Route::get('/ping', fn () => response()->json([
     'app' => 'kariva',
     'database' => DB::selectOne('select 1 as ok')->ok === 1,
 ]));
+
+// For the uptime monitor: 200 when the app can serve, 503 when it cannot.
+Route::get('health', [HealthController::class, 'basic']);
 
 Route::prefix('auth')->group(function () {
     Route::post('otp', [AuthController::class, 'sendOtp']);
@@ -43,7 +51,29 @@ Route::get('actors/{actor}/reviews', [ReviewController::class, 'index']);
 Route::get('needs', [NeedController::class, 'index']);
 Route::get('needs/{need}', [NeedController::class, 'show']);
 
-Route::middleware('auth:sanctum')->group(function () {
+// The admin panel: platform admins only, separate from the actor system (no X-Actor-Id).
+Route::prefix('admin')->middleware(['auth:sanctum', 'active', 'admin', 'throttle:120,1'])->group(function () {
+    Route::get('overview', [ModerationController::class, 'overview']);
+    Route::get('health', [HealthController::class, 'detailed']);
+    Route::get('verifications', [VerificationReviewController::class, 'index']);
+    Route::get('verifications/{verification}', [VerificationReviewController::class, 'show']);
+    Route::post('verifications/{verification}/approve', [VerificationReviewController::class, 'approve']);
+    Route::post('verifications/{verification}/reject', [VerificationReviewController::class, 'reject']);
+    Route::get('documents/{media}', [VerificationReviewController::class, 'document']);
+    Route::get('reports', [ReportController::class, 'index']);
+    Route::post('reports/{report}/resolve', [ReportController::class, 'resolve']);
+    Route::post('reports/{report}/dismiss', [ReportController::class, 'dismiss']);
+    Route::get('actors', [ModerationController::class, 'actors']);
+    Route::post('actors/{actor}/suspend', [ModerationController::class, 'suspendActor']);
+    Route::post('actors/{actor}/unsuspend', [ModerationController::class, 'unsuspendActor']);
+    Route::post('users/{user}/suspend', [ModerationController::class, 'suspendUser']);
+    Route::post('users/{user}/unsuspend', [ModerationController::class, 'unsuspendUser']);
+    Route::delete('reviews/{review}', [ModerationController::class, 'deleteReview']);
+    Route::post('services/{service}/archive', [ModerationController::class, 'archiveService']);
+    Route::get('audit-logs', [ModerationController::class, 'audit']);
+});
+
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
     // Shows which actor the request acts as; the SPA calls it after switching actor.
     Route::get('context', fn (Request $r) => response()->json([
@@ -101,6 +131,12 @@ Route::middleware('auth:sanctum')->group(function () {
         foreach (['quote', 'accept', 'reject', 'cancel', 'done', 'confirm', 'dispute'] as $step) {
             Route::post("orders/{order}/$step", [OrderController::class, $step]);
         }
+    });
+
+    // Identity verification of the acting actor.
+    Route::middleware('actor')->group(function () {
+        Route::get('verification', [VerificationController::class, 'show']);
+        Route::post('verification', [VerificationController::class, 'store'])->middleware('throttle:10,1');
     });
 
     // Chat, as the acting actor.

@@ -13,12 +13,23 @@ return [
         'max_sends_per_hour' => 3,
         // The spec limits sends per phone and per IP. Many Afghan users share one mobile-carrier IP, so this is tunable.
         'max_sends_per_hour_per_ip' => (int) env('OTP_MAX_SENDS_PER_IP', 3),
+        // How the code reaches the phone: "log" (development) or "http" (a WhatsApp or SMS gateway).
+        'driver' => env('OTP_DRIVER', 'log'),
+        'http' => [
+            'url' => env('OTP_HTTP_URL'),
+            'token' => env('OTP_HTTP_TOKEN'),
+            'body' => env('OTP_HTTP_BODY', '{"to":"{phone}","message":"{message}"}'),
+            'message' => env('OTP_MESSAGE', 'کد ورود کاریوا: {code}'),
+        ],
         // Development only (ignored in production): a fixed code such as 1234, like the prototype.
         'fake_code' => env('OTP_FAKE_CODE'),
     ],
 
     // "Invited past job": confirmed by the customer via OTP, capped per provider per month (Asia/Kabul).
     'invited_orders_per_month' => 5,
+
+    // Identity documents are deleted this many days after an admin decides (spec: private, with a purge date).
+    'verification_files_days' => (int) env('VERIFICATION_FILES_DAYS', 30),
 
     // Order timing. The spec proposes these values; Ghafoor had no other preference, so they are the defaults.
     // Ready-made review labels (translated in the client).
@@ -30,6 +41,14 @@ return [
         'expire_requested_hours' => (int) env('ORDER_EXPIRE_REQUESTED_HOURS', 72),   // provider never answered
         'expire_quoted_days' => (int) env('ORDER_EXPIRE_QUOTED_DAYS', 7),            // customer never accepted the price
         'auto_complete_days' => (int) env('ORDER_AUTO_COMPLETE_DAYS', 7),            // customer never confirmed or disputed
+    ],
+
+    'backup' => [
+        'path' => env('BACKUP_PATH', storage_path('app/backups')),
+        'files_path' => env('BACKUP_FILES_PATH', storage_path('app/public')),
+        'keep_days' => (int) env('BACKUP_KEEP_DAYS', 14),
+        // Optional second copy on another disk (an S3 disk named in config/filesystems.php).
+        'disk' => env('BACKUP_DISK'),
     ],
 
     'media' => [
@@ -45,6 +64,8 @@ return [
             'actor' => ['avatar' => ['max_kb' => 3072, 'max_count' => 1], 'cover' => ['max_kb' => 5120, 'max_count' => 1]],
             'service' => ['gallery' => ['max_kb' => 5120, 'max_count' => 8]],
             'portfolio_item' => ['images' => ['max_kb' => 5120, 'max_count' => 10]],
+            // Identity document photos: private disk, never public, deleted some days after the decision.
+            'verification_request' => ['document' => ['max_kb' => 6144, 'max_count' => 4, 'private' => true]],
         ],
     ],
 ];
