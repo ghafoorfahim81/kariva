@@ -8,6 +8,8 @@ use App\Http\Resources\OrderResource;
 use App\Models\Actor;
 use App\Models\Order;
 use App\Support\Cursor;
+use App\Support\Phone;
+use App\Support\Text;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -115,6 +117,42 @@ class OrderController extends Controller
     public function dispute(Request $request, Order $order, OrderFlow $flow): JsonResponse
     {
         return $this->act($request, $order, fn ($a) => $flow->dispute($order, $a));
+    }
+
+    // ---------------------------------------------------------------- "invited past job"
+
+    /** A provider records work done before; the customer (found by phone) gets a confirmation code. */
+    public function invite(Request $request, OrderFlow $flow): JsonResponse
+    {
+        $actor = $this->actor($request);
+        Gate::authorize('update', $actor);
+        $request->merge(['phone' => Phone::normalize((string) $request->input('phone'))]);
+        $data = $request->validate([
+            'phone' => ['required', 'regex:/^\+937\d{8}$/'],
+            'title' => ['required', 'string', 'min:2', 'max:150'],
+            'description' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        return $this->respond($request, $flow->createInvited($actor, $data['phone'], $data, $request->ip()), 201);
+    }
+
+    public function resendCode(Request $request, Order $order, OrderFlow $flow): JsonResponse
+    {
+        $this->party($request, $order);
+        Gate::authorize('update', $this->actor($request));
+        $flow->resendInvitedCode($order, $this->actor($request), $request->ip());
+
+        return response()->json(null, 204);
+    }
+
+    public function confirmInvited(Request $request, Order $order, OrderFlow $flow): JsonResponse
+    {
+        $this->party($request, $order);
+        Gate::authorize('update', $this->actor($request));
+        $request->merge(['code' => preg_replace('/\s+/', '', Text::latinDigits((string) $request->input('code')))]);
+        $data = $request->validate(['code' => ['required', 'digits:'.config('kariva.otp.digits')]]);
+
+        return $this->respond($request, $flow->confirmInvited($order, $this->actor($request), $data['code']));
     }
 
     // ---------------------------------------------------------------- helpers

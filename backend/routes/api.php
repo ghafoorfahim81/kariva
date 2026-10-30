@@ -93,6 +93,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('orders', [OrderController::class, 'index']);
         Route::post('orders', [OrderController::class, 'store']);
         Route::get('orders/{order}', [OrderController::class, 'show']);
+        Route::post('invited-jobs', [OrderController::class, 'invite'])->middleware('throttle:20,1');
+        Route::post('orders/{order}/invited-code', [OrderController::class, 'resendCode'])->middleware('throttle:10,1');
+        Route::post('orders/{order}/confirm-invited', [OrderController::class, 'confirmInvited'])->middleware('throttle:20,1');
         Route::post('orders/{order}/review', [ReviewController::class, 'store']);
         Route::post('reviews/{review}/reply', [ReviewController::class, 'reply']);
         foreach (['quote', 'accept', 'reject', 'cancel', 'done', 'confirm', 'dispute'] as $step) {

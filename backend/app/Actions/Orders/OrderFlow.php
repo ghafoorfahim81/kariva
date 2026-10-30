@@ -2,12 +2,16 @@
 
 namespace App\Actions\Orders;
 
+use App\Actions\Auth\SendOtp;
+use App\Actions\Auth\VerifyOtp;
 use App\Actions\Stats\RefreshActorStats;
 use App\Exceptions\ApiException;
 use App\Models\Actor;
 use App\Models\Order;
 use App\Models\Service;
+use App\Models\User;
 use App\Support\Notifier;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -64,6 +68,125 @@ class OrderFlow
 
             return $order->refresh();
         });
+    }
+
+    /**
+     * "Invited past job": a provider records work done before, so a new profile is not empty. The customer is found by
+     * phone number (an account is prepared if there is none) and gets a code; the order counts only after the code is entered.
+     */
+    public function createInvited(Actor $provider, string $phone, array $input, ?string $ip): Order
+    {
+        if (! $provider->isActive()) {
+            throw new ApiException('order.actor_unavailable', 422);
+        }
+
+        $order = DB::transaction(function () use ($provider, $phone, $input) {
+            $user = User::withTrashed()->where('phone_e164', $phone)->first();
+            if ($user?->trashed() || $user?->status === 'suspended') {
+                throw new ApiException('order.actor_unavailable', 422);
+            }
+            $customer = $user ? Actor::where('personal_user_id', $user->id)->firstOrFail() : $this->prepareCustomer($phone);
+
+            if ($customer->id === $provider->id || DB::table('actor_members')->where(['actor_id' => $provider->id, 'user_id' => $customer->personal_user_id])->exists()) {
+                throw new ApiException('order.cannot_order_from_self', 422);
+            }
+
+            try {
+                $order = DB::transaction(fn () => Order::create([
+                    'origin' => 'invited',
+                    'customer_actor_id' => $customer->id,
+                    'provider_actor_id' => $provider->id,
+                    'title_snapshot' => trim($input['title']),
+                    'description' => $input['description'] ?? null,
+                    'status' => 'invited',
+                ]));
+            } catch (QueryException $e) {
+                if (str_contains($e->getMessage(), 'limit reached')) {
+                    throw new ApiException('invited.limit_reached', 422, ['max_per_month' => config('kariva.invited_orders_per_month')]);
+                }
+                throw $e;
+            }
+            $this->openConversation($order);
+            $this->event($order, 'invited', $provider, null, 'invited');
+
+            return $order;
+        });
+
+        // The order exists either way; if the code could not be sent (rate limit) the provider can ask again.
+        try {
+            $this->sendCode($phone, $ip);
+            $sent = true;
+        } catch (ApiException) {
+            $sent = false;
+        }
+
+        return $order->refresh()->setAttribute('code_sent', $sent);
+    }
+
+    /** Sends the confirmation code to the customer again. */
+    public function resendInvitedCode(Order $order, Actor $by, ?string $ip): void
+    {
+        $o = $this->invitedOrder($order, $by, 'provider');
+        $this->sendCode($this->customerPhone($o), $ip);
+    }
+
+    /** The code (read from the customer's phone) turns the past job into a completed order. Either party may enter it. */
+    public function confirmInvited(Order $order, Actor $by, string $code): Order
+    {
+        $o = $this->invitedOrder($order, $by, null);
+        app(VerifyOtp::class)($this->customerPhone($o), 'invited_job', $code);
+
+        return DB::transaction(function () use ($o, $by) {
+            $locked = Order::whereKey($o->id)->lockForUpdate()->firstOrFail();
+            if ($locked->status !== 'invited') {
+                throw new ApiException('order.invalid_state', 409, ['status' => $locked->status]);
+            }
+            $locked->update(['status' => 'completed', 'completed_at' => now()]);
+            $this->event($locked, 'confirmed_by_code', $by, 'invited', 'completed');
+            ($this->stats)($locked->provider_actor_id);
+            Notifier::actor($locked->provider_actor_id, 'order.completed', "order:{$locked->id}:completed", $this->payload($locked, $by));
+            Notifier::actor($locked->customer_actor_id, 'order.review_invite', "order:{$locked->id}:review_invite", $this->payload($locked, $by));
+
+            return $locked->refresh();
+        });
+    }
+
+    private function invitedOrder(Order $order, Actor $by, ?string $side): Order
+    {
+        $o = Order::findOrFail($order->id);
+        $isProvider = $o->provider_actor_id === $by->id;
+        $isCustomer = $o->customer_actor_id === $by->id;
+        if ($o->origin !== 'invited' || (! $isProvider && ! $isCustomer)) {
+            throw new ApiException('order.wrong_side', 403);
+        }
+        if ($side === 'provider' && ! $isProvider) {
+            throw new ApiException('order.wrong_side', 403);
+        }
+        if ($o->status !== 'invited') {
+            throw new ApiException('order.invalid_state', 409, ['status' => $o->status]);
+        }
+
+        return $o;
+    }
+
+    private function customerPhone(Order $o): string
+    {
+        return DB::table('users')->join('actors', 'actors.personal_user_id', '=', 'users.id')->where('actors.id', $o->customer_actor_id)->value('users.phone_e164');
+    }
+
+    private function sendCode(string $phone, ?string $ip): void
+    {
+        app(SendOtp::class)($phone, 'invited_job', $ip);
+    }
+
+    /** A customer who has never used Kariva: a user in status "invited" with its personal actor. They become active on first login. */
+    private function prepareCustomer(string $phone): Actor
+    {
+        $user = User::create(['phone_e164' => $phone, 'status' => 'invited']);
+        $actor = Actor::create(['type' => 'person', 'personal_user_id' => $user->id, 'display_name' => 'کاربر '.substr($phone, -4), 'search_text' => '']);
+        DB::table('actor_members')->insert(['actor_id' => $actor->id, 'user_id' => $user->id, 'role' => 'owner', 'is_primary' => true]);
+
+        return $actor;
     }
 
     /**
