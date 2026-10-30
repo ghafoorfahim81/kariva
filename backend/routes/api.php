@@ -3,11 +3,17 @@
 use App\Http\Controllers\ActorController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\NeedController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PortfolioController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\TrustController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +39,9 @@ Route::get('actors/{actor}', [ActorController::class, 'show']);
 Route::get('actors/{actor}/services', [ServiceController::class, 'index']);
 Route::get('services/{service}', [ServiceController::class, 'show']);
 Route::get('actors/{actor}/portfolio', [PortfolioController::class, 'index']);
+Route::get('actors/{actor}/reviews', [ReviewController::class, 'index']);
+Route::get('needs', [NeedController::class, 'index']);
+Route::get('needs/{need}', [NeedController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('me', [AuthController::class, 'me']);
@@ -66,6 +75,51 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('actors/{actor}/portfolio', [PortfolioController::class, 'store']);
     Route::patch('portfolio/{item}', [PortfolioController::class, 'update']);
     Route::delete('portfolio/{item}', [PortfolioController::class, 'destroy']);
+
+    // Needs and offers: acting as the actor in X-Actor-Id.
+    Route::middleware('actor')->group(function () {
+        Route::get('my/needs', [NeedController::class, 'mine']);
+        Route::post('needs', [NeedController::class, 'store']);
+        Route::post('needs/{need}/close', [NeedController::class, 'close']);
+        Route::get('needs/{need}/offers', [NeedController::class, 'offers']);
+        Route::post('needs/{need}/offers', [NeedController::class, 'offer']);
+        Route::post('offers/{offer}/withdraw', [NeedController::class, 'withdraw']);
+        Route::post('offers/{offer}/reject', [NeedController::class, 'rejectOffer']);
+        Route::post('offers/{offer}/accept', [NeedController::class, 'acceptOffer']);
+    });
+
+    // Orders: always as the actor in X-Actor-Id.
+    Route::middleware('actor')->group(function () {
+        Route::get('orders', [OrderController::class, 'index']);
+        Route::post('orders', [OrderController::class, 'store']);
+        Route::get('orders/{order}', [OrderController::class, 'show']);
+        Route::post('invited-jobs', [OrderController::class, 'invite'])->middleware('throttle:20,1');
+        Route::post('orders/{order}/invited-code', [OrderController::class, 'resendCode'])->middleware('throttle:10,1');
+        Route::post('orders/{order}/confirm-invited', [OrderController::class, 'confirmInvited'])->middleware('throttle:20,1');
+        Route::post('orders/{order}/review', [ReviewController::class, 'store']);
+        Route::post('reviews/{review}/reply', [ReviewController::class, 'reply']);
+        foreach (['quote', 'accept', 'reject', 'cancel', 'done', 'confirm', 'dispute'] as $step) {
+            Route::post("orders/{order}/$step", [OrderController::class, $step]);
+        }
+    });
+
+    // Chat, as the acting actor.
+    Route::middleware('actor')->group(function () {
+        Route::get('conversations', [ConversationController::class, 'index']);
+        Route::post('conversations/direct', [ConversationController::class, 'direct']);
+        Route::get('conversations/{conversation}/messages', [ConversationController::class, 'messages']);
+        Route::post('conversations/{conversation}/messages', [ConversationController::class, 'send'])->middleware('throttle:60,1');
+        Route::post('conversations/{conversation}/read', [ConversationController::class, 'read']);
+    });
+
+    // Per user (no actor needed).
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::post('notifications/read-all', [NotificationController::class, 'readAll']);
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'read']);
+    Route::post('reports', [TrustController::class, 'report'])->middleware('throttle:20,1');
+    Route::get('favorites', [TrustController::class, 'favorites']);
+    Route::put('favorites/{type}/{id}', [TrustController::class, 'addFavorite']);
+    Route::delete('favorites/{type}/{id}', [TrustController::class, 'removeFavorite']);
 
     Route::post('media', [MediaController::class, 'store'])->middleware('throttle:30,1');
     Route::delete('media/{media}', [MediaController::class, 'destroy']);
