@@ -210,6 +210,23 @@ class MediaApiTest extends ApiTestCase
         Storage::disk('public')->assertMissing($path);
     }
 
+    public function test_the_avatar_or_cover_can_be_removed_by_slot(): void
+    {
+        $page = $this->business();
+        $this->upload($page['user'], 'actor', $page['actor'], 'avatar')->assertCreated();
+        $this->upload($page['user'], 'actor', $page['actor'], 'cover')->assertCreated();
+        $avatarPath = DB::table('media')->where('collection', 'avatar')->value('path');
+
+        $this->actingAsUser($this->member($page['actor'], 'viewer'))->deleteJson("/api/v1/actors/{$page['actor']}/photos/avatar")->assertForbidden();
+        $this->actingAsUser($this->person()['user'])->deleteJson("/api/v1/actors/{$page['actor']}/photos/avatar")->assertForbidden();
+        $this->actingAsUser($page['user'])->deleteJson("/api/v1/actors/{$page['actor']}/photos/gallery")->assertNotFound();
+        $this->actingAsUser($page['user'])->deleteJson("/api/v1/actors/{$page['actor']}/photos/avatar")->assertNoContent();
+
+        Storage::disk('public')->assertMissing($avatarPath);
+        $this->assertSame(['cover'], DB::table('media')->pluck('collection')->all());
+        $this->actingAsUser($page['user'])->deleteJson("/api/v1/actors/{$page['actor']}/photos/avatar")->assertNoContent();   // already gone: still fine
+    }
+
     public function test_search_cards_carry_the_avatar(): void
     {
         $page = $this->business(null, ['category_id' => $this->category()]);

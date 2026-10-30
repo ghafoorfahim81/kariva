@@ -69,4 +69,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('media', [MediaController::class, 'store'])->middleware('throttle:30,1');
     Route::delete('media/{media}', [MediaController::class, 'destroy']);
+    Route::delete('actors/{actor}/photos/{collection}', [MediaController::class, 'destroySlot']);
 });
