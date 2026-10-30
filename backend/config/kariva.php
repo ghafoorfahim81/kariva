@@ -20,6 +20,13 @@ return [
     // "Invited past job": confirmed by the customer via OTP, capped per provider per month (Asia/Kabul).
     'invited_orders_per_month' => 5,
 
+    // Order timing. The spec proposes these values; Ghafoor had no other preference, so they are the defaults.
+    'orders' => [
+        'expire_requested_hours' => (int) env('ORDER_EXPIRE_REQUESTED_HOURS', 72),   // provider never answered
+        'expire_quoted_days' => (int) env('ORDER_EXPIRE_QUOTED_DAYS', 7),            // customer never accepted the price
+        'auto_complete_days' => (int) env('ORDER_AUTO_COMPLETE_DAYS', 7),            // customer never confirmed or disputed
+    ],
+
     'media' => [
         // Public files go to one disk, private ones (order files, verification documents) to another.
         'public_disk' => env('MEDIA_PUBLIC_DISK', 'public'),
