@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ServiceController;
@@ -66,6 +67,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('actors/{actor}/portfolio', [PortfolioController::class, 'store']);
     Route::patch('portfolio/{item}', [PortfolioController::class, 'update']);
     Route::delete('portfolio/{item}', [PortfolioController::class, 'destroy']);
+
+    // Orders: always as the actor in X-Actor-Id.
+    Route::middleware('actor')->group(function () {
+        Route::get('orders', [OrderController::class, 'index']);
+        Route::post('orders', [OrderController::class, 'store']);
+        Route::get('orders/{order}', [OrderController::class, 'show']);
+        foreach (['quote', 'accept', 'reject', 'cancel', 'done', 'confirm', 'dispute'] as $step) {
+            Route::post("orders/{order}/$step", [OrderController::class, $step]);
+        }
+    });
 
     Route::post('media', [MediaController::class, 'store'])->middleware('throttle:30,1');
     Route::delete('media/{media}', [MediaController::class, 'destroy']);

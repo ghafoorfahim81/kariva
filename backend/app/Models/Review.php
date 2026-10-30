@@ -12,4 +12,6 @@ class Review extends Model
     protected $table = 'reviews';
 
     protected $guarded = [];
+
+    protected $casts = ['tags' => 'array', 'replied_at' => 'datetime'];
 }
