@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\PgTextArray;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +15,8 @@ class Category extends Model
     protected $table = 'categories';
 
     protected $guarded = [];
+
+    protected $casts = ['aliases' => PgTextArray::class];
 
     public function parent(): BelongsTo
     {

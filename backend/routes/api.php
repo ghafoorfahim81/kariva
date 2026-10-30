@@ -8,8 +8,10 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NeedController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PortfolioController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\TrustController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +37,7 @@ Route::get('actors/{actor}', [ActorController::class, 'show']);
 Route::get('actors/{actor}/services', [ServiceController::class, 'index']);
 Route::get('services/{service}', [ServiceController::class, 'show']);
 Route::get('actors/{actor}/portfolio', [PortfolioController::class, 'index']);
+Route::get('actors/{actor}/reviews', [ReviewController::class, 'index']);
 Route::get('needs', [NeedController::class, 'index']);
 Route::get('needs/{need}', [NeedController::class, 'show']);
 
@@ -88,10 +91,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('orders', [OrderController::class, 'index']);
         Route::post('orders', [OrderController::class, 'store']);
         Route::get('orders/{order}', [OrderController::class, 'show']);
+        Route::post('orders/{order}/review', [ReviewController::class, 'store']);
+        Route::post('reviews/{review}/reply', [ReviewController::class, 'reply']);
         foreach (['quote', 'accept', 'reject', 'cancel', 'done', 'confirm', 'dispute'] as $step) {
             Route::post("orders/{order}/$step", [OrderController::class, $step]);
         }
     });
+
+    // Per user (no actor needed).
+    Route::post('reports', [TrustController::class, 'report'])->middleware('throttle:20,1');
+    Route::get('favorites', [TrustController::class, 'favorites']);
+    Route::put('favorites/{type}/{id}', [TrustController::class, 'addFavorite']);
+    Route::delete('favorites/{type}/{id}', [TrustController::class, 'removeFavorite']);
 
     Route::post('media', [MediaController::class, 'store'])->middleware('throttle:30,1');
     Route::delete('media/{media}', [MediaController::class, 'destroy']);

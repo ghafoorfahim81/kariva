@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\PgTextArray;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,5 +14,5 @@ class Review extends Model
 
     protected $guarded = [];
 
-    protected $casts = ['tags' => 'array', 'replied_at' => 'datetime'];
+    protected $casts = ['tags' => PgTextArray::class, 'replied_at' => 'datetime'];
 }
