@@ -111,3 +111,113 @@ export interface PortfolioItem {
   description: string | null
   images: string[]
 }
+
+export type OrderStatus = 'invited' | 'requested' | 'quoted' | 'accepted' | 'provider_done' | 'completed' | 'rejected' | 'cancelled' | 'expired' | 'disputed'
+
+export interface Quote {
+  id: string
+  amount: string
+  currency: 'AFN' | 'USD'
+  unit: string
+  days: number | null
+  note: string | null
+  status: string
+  created_at: string
+}
+
+export interface OrderParty {
+  id: string
+  display_name: string
+  type: 'person' | 'business'
+  contact_phone?: string | null
+  whatsapp?: string | null
+}
+
+export interface Order {
+  id: string
+  origin: 'service' | 'direct' | 'offer' | 'invited'
+  status: OrderStatus
+  my_side: 'customer' | 'provider' | null
+  title: string
+  description: string | null
+  service_id: string | null
+  customer?: OrderParty
+  provider?: OrderParty
+  agreed: { amount: string; currency: 'AFN' | 'USD'; unit: string } | null
+  pending_quote?: Quote | null
+  quotes?: Quote[]
+  events?: { event: string; by_actor_id: string | null; from: string | null; to: string | null; at: string }[]
+  conversation_id?: string | null
+  review?: { id: string; stars: number } | null
+  code_sent?: boolean
+  created_at: string
+  completed_at: string | null
+}
+
+export interface Need {
+  id: string
+  kind: 'service' | 'job'
+  status: string
+  title: string
+  description: string | null
+  category: Category | null
+  city: City | null
+  actor: { id: string; display_name: string; type: string }
+  is_mine: boolean
+  pending_offers?: number
+  expires_at: string | null
+  created_at: string
+}
+
+export interface Offer {
+  id: string
+  need_id: string
+  status: 'pending' | 'accepted' | 'rejected' | 'withdrawn'
+  amount: string
+  currency: 'AFN' | 'USD'
+  unit: string
+  days: number | null
+  message: string | null
+  provider: OrderParty
+  created_at: string
+}
+
+export interface ConversationSummary {
+  id: string
+  kind: 'order' | 'direct'
+  order_id: string | null
+  order_title: string | null
+  order_status: string | null
+  other: { id: string; display_name: string; type: string }
+  last_message: string | null
+  last_message_at: string | null
+  unread: number
+}
+
+export interface ChatMessage {
+  id: string
+  sender_actor_id: string
+  mine: boolean
+  kind: 'text' | 'media'
+  body: string | null
+  created_at: string
+}
+
+export interface Notice {
+  id: string
+  type: string
+  data: Record<string, unknown>
+  read: boolean
+  created_at: string
+}
+
+export interface Review {
+  id: string
+  order_id: string
+  stars: number
+  tags: string[]
+  body: string | null
+  reply: { body: string; at: string } | null
+  created_at: string
+  customer?: { id: string; display_name: string | null }
+}
