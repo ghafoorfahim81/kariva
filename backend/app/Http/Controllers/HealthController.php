@@ -48,9 +48,10 @@ class HealthController extends Controller
     private function cache(): array
     {
         try {
-            Cache::put('health:ping', 1, 10);
+            $token = bin2hex(random_bytes(4));   // a string: the Redis store hands numbers back as strings
+            Cache::put('health:ping', $token, 10);
 
-            return ['ok' => Cache::get('health:ping') === 1];
+            return ['ok' => Cache::get('health:ping') === $token];
         } catch (\Throwable) {
             return ['ok' => false];
         }

@@ -78,6 +78,7 @@ export interface Me {
   email: string | null
   locale: 'fa' | 'ps' | 'en'
   status: string
+  is_admin?: boolean
   actors: MyActor[]
 }
 
