@@ -52,8 +52,8 @@ Orders, quotes, needs and offers, chat, notifications, reviews, admin panel, pos
 - Translation keys for the new texts (Pashto and English are partly missing), UUID leftovers in demo data, removing old tabs.
 - The "services" and "work" discovery tabs still show prototype samples.
 
-## Assumptions to confirm
+## Decisions (confirmed by Ghafoor)
 
-1. The phone limit per IP defaults to 3 as in the spec; carriers share IPs, so you may want a higher number.
-2. A person profile needs a profession (or one active service) to appear in search.
-3. Public profiles show the call and WhatsApp numbers to everyone, as the product idea needs.
+1. The OTP limit per IP stays at 3 per hour, as in the spec (`OTP_MAX_SENDS_PER_IP`, tunable later if carriers' shared IPs cause trouble).
+2. A profile appears in search only when it has a profession or an active service.
+3. Public profiles show the call and WhatsApp numbers to everyone.
