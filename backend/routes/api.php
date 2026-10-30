@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\VerificationReviewController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\NeedController;
@@ -27,6 +28,9 @@ Route::get('/ping', fn () => response()->json([
     'app' => 'kariva',
     'database' => DB::selectOne('select 1 as ok')->ok === 1,
 ]));
+
+// For the uptime monitor: 200 when the app can serve, 503 when it cannot.
+Route::get('health', [HealthController::class, 'basic']);
 
 Route::prefix('auth')->group(function () {
     Route::post('otp', [AuthController::class, 'sendOtp']);
@@ -50,6 +54,7 @@ Route::get('needs/{need}', [NeedController::class, 'show']);
 // The admin panel: platform admins only, separate from the actor system (no X-Actor-Id).
 Route::prefix('admin')->middleware(['auth:sanctum', 'active', 'admin', 'throttle:120,1'])->group(function () {
     Route::get('overview', [ModerationController::class, 'overview']);
+    Route::get('health', [HealthController::class, 'detailed']);
     Route::get('verifications', [VerificationReviewController::class, 'index']);
     Route::get('verifications/{verification}', [VerificationReviewController::class, 'show']);
     Route::post('verifications/{verification}/approve', [VerificationReviewController::class, 'approve']);

@@ -13,6 +13,14 @@ return [
         'max_sends_per_hour' => 3,
         // The spec limits sends per phone and per IP. Many Afghan users share one mobile-carrier IP, so this is tunable.
         'max_sends_per_hour_per_ip' => (int) env('OTP_MAX_SENDS_PER_IP', 3),
+        // How the code reaches the phone: "log" (development) or "http" (a WhatsApp or SMS gateway).
+        'driver' => env('OTP_DRIVER', 'log'),
+        'http' => [
+            'url' => env('OTP_HTTP_URL'),
+            'token' => env('OTP_HTTP_TOKEN'),
+            'body' => env('OTP_HTTP_BODY', '{"to":"{phone}","message":"{message}"}'),
+            'message' => env('OTP_MESSAGE', 'کد ورود کاریوا: {code}'),
+        ],
         // Development only (ignored in production): a fixed code such as 1234, like the prototype.
         'fake_code' => env('OTP_FAKE_CODE'),
     ],
@@ -33,6 +41,14 @@ return [
         'expire_requested_hours' => (int) env('ORDER_EXPIRE_REQUESTED_HOURS', 72),   // provider never answered
         'expire_quoted_days' => (int) env('ORDER_EXPIRE_QUOTED_DAYS', 7),            // customer never accepted the price
         'auto_complete_days' => (int) env('ORDER_AUTO_COMPLETE_DAYS', 7),            // customer never confirmed or disputed
+    ],
+
+    'backup' => [
+        'path' => env('BACKUP_PATH', storage_path('app/backups')),
+        'files_path' => env('BACKUP_FILES_PATH', storage_path('app/public')),
+        'keep_days' => (int) env('BACKUP_KEEP_DAYS', 14),
+        // Optional second copy on another disk (an S3 disk named in config/filesystems.php).
+        'disk' => env('BACKUP_DISK'),
     ],
 
     'media' => [
