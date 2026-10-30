@@ -15,3 +15,7 @@ Schedule::job(new PurgeMedia)->dailyAt('03:00')->timezone(config('kariva.display
 Schedule::command('orders:expire')->hourly()->withoutOverlapping();
 Schedule::command('orders:auto-complete')->hourly()->withoutOverlapping();
 Schedule::command('needs:expire')->hourly()->withoutOverlapping();
+
+// Operations: a heartbeat for the health check, and the daily backup (02:30 Kabul time, when nobody is online).
+Schedule::command('kariva:heartbeat')->everyMinute();
+Schedule::command('kariva:backup')->dailyAt('02:30')->timezone(config('kariva.display_timezone'))->withoutOverlapping();

@@ -1,0 +1,2 @@
+# /etc/cron.d/kariva  -  the Laravel scheduler: order expiry, backups, clean-up, heartbeat.
+* * * * * www-data cd /var/www/kariva/backend && php artisan schedule:run >> /dev/null 2>&1
