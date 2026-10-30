@@ -84,6 +84,12 @@ export const noticeText = (n: Notice): string => {
     'need.expired': [`مهلت نیازمندی تمام شد: ${title}`, `Your need expired: ${title}`],
     'review.received': ['یک نظر تازه گرفتید', 'You received a new review'],
     'review.replied': ['ارائه‌دهنده به نظر شما پاسخ داد', 'The provider replied to your review'],
+    'verification.approved': ['هویت شما تأیید شد ✔', 'Your identity was verified ✔'],
+    'verification.rejected': ['درخواست تأیید رد شد؛ دلیل را ببینید', 'Verification declined; see the reason'],
+    'report.resolved': ['گزارش شما بررسی و رسیدگی شد', 'Your report was reviewed and acted on'],
+    'report.dismissed': ['گزارش شما بررسی شد؛ تخلفی دیده نشد', 'Your report was reviewed; no violation found'],
+    'actor.suspended': ['صفحهٔ شما تعلیق شد', 'Your page was suspended'],
+    'actor.unsuspended': ['تعلیق صفحهٔ شما برداشته شد', 'Your page suspension was lifted'],
     'message.new': [`پیام تازه از ${by}`, `New message from ${by}`],
   }
   return m[n.type] ? tr(...m[n.type]) : n.type

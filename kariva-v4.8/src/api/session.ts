@@ -107,6 +107,13 @@ const MESSAGES: Record<string, { fa: string; en: string }> = {
   'report.already_open': { fa: 'گزارش شما قبلاً ثبت شده و در بررسی است', en: 'Your report is already being reviewed' },
   'conversation.actor_unavailable': { fa: 'این صفحه در دسترس نیست', en: 'This page is not available' },
   'conversation.with_self': { fa: 'با خودتان نمی‌توانید گفت‌وگو کنید', en: 'You cannot chat with yourself' },
+  'verification.already_pending': { fa: 'درخواست شما در حال بررسی است', en: 'Your request is already being reviewed' },
+  'verification.already_verified': { fa: 'این صفحه قبلاً تأیید شده است', en: 'This page is already verified' },
+  'verification.not_pending': { fa: 'درخواست دیگر در انتظار نیست', en: 'The request is no longer pending' },
+  'verification.note_required': { fa: 'برای رد کردن دلیل بنویسید', en: 'Write a reason when rejecting' },
+  'admin.forbidden': { fa: 'اجازهٔ مدیریت ندارید', en: 'Admin access required' },
+  'admin.action_does_not_fit': { fa: 'این کار برای این گزارش مناسب نیست', en: 'That action does not fit this report' },
+  'report.not_open': { fa: 'این گزارش قبلاً رسیدگی شده', en: 'This report was already handled' },
   validation: { fa: 'اطلاعات واردشده درست نیست', en: 'Some information is not valid' },
   rule_violation: { fa: 'این کار مجاز نیست', en: 'This is not allowed' },
 }
