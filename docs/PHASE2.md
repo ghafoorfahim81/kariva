@@ -52,6 +52,26 @@ A **service** need collects offers; accepting one creates an order (origin `offe
 These were the two open decisions in `CLAUDE.md`. The spec proposed these values and Ghafoor had no other preference, so they are the defaults; they are settings, not code.
 Commands: `orders:expire`, `orders:auto-complete`, `needs:expire`.
 
-## Not in this part
+## Web screens (kariva-v4.8)
 
-Photos and voice in messages (the `media` table already allows them), the order-attachment upload, the reverse "customer rates" direction, blocks (phase 5), and the web screens, which are wired in the next step.
+New files, each wired straight to the API (the old demo state for these screens is no longer used):
+
+| File | Replaces |
+| --- | --- |
+| `components/OrdersPanel.vue` | the demo order list and order sheet: list by side (customer / provider), quote, accept, reject, cancel, done, confirm, dispute, review form, history, past-job flow and code entry |
+| `components/RequestOrderModal.vue` | "request a service" (from a service or directly) |
+| `components/NeedsBoard.vue` | the demo "opportunities" tab: public board with filters, post a need, make an offer, see and accept offers, close, message about a job |
+| `components/ChatPanel.vue` | the demo messages tab (polls every few seconds) |
+| `components/NotificationsPanel.vue` | the demo notification centre; tapping a notification opens the order, chat or board |
+| `components/ReviewsModal.vue` | public reviews, provider reply, report a review |
+| `state/live.ts` | unread counters for the bell and the messages tab (polled every 20 s) |
+
+Also: favorites and rating summaries on profile cards use the API; the sidebar shows live needs; all dates are shown in the Jalali calendar (Asia/Kabul) and amounts keep their own currency and unit.
+Verified in a real browser with two users: request, price, accept (price locked), done, confirm, review (profile stats update), chat with unread badge, notifications; a need with an offer that becomes an order; a job need that offers only a message; a past job confirmed by code.
+
+## Not done yet
+
+- Photos and voice in messages, order attachments.
+- Block user, admin panel and verification screens (Phase 3), reports from the profile page.
+- The old demo code paths (posts, careers, old order state, demo admin) are still in `App.vue` but no longer reached by the screens above; removing them is part of the prototype clean-up.
+- Translation keys: the new screens use `tr(fa, en)`; Pashto falls back to Dari until the texts are written.
