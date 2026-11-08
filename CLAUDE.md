@@ -11,7 +11,7 @@ Owner: Ghafoor Fahim. Timezone Asia/Kabul. Reference spec: `Kariva_Spec_v3.pdf` 
 - Web first. Flutter mobile comes months after the web launch, on the same API. No Inertia.
 
 ## Language and UI rules
-- Dari first (RTL), Pashto second, English third. All UI text uses translation keys. User-written text is never translated.
+- Dari first (RTL), Pashto second, English third. All UI text uses translation keys (`tr('area.name')`, catalogs in `kariva-v4.8/src/i18n/`; `npm run build` rejects Dari written directly in code). User-written text is never translated.
 - Font: Vazirmatn. Big touch targets, icons plus short words, large call and WhatsApp buttons.
 - Normalize Persian/Arabic digits and letters on input. Phone is stored in E.164 (`+93…`, 9 digits after +93, starting with 7), validated with libphonenumber.
 - Store time in UTC, display Jalali. Money is `numeric(14,2)` with currency (AFN/USD) and unit; no conversion, no tax, no commission.

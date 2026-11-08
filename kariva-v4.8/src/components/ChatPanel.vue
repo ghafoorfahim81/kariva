@@ -5,7 +5,7 @@ import { chat } from '../api/endpoints'
 import { errorText, session } from '../api/session'
 import type { ChatMessage, ConversationSummary } from '../api/types'
 import { refreshLive } from '../state/live'
-import { dateText, notify, tr, ui } from '../state/ui'
+import { dateText, notify, tr } from '../state/ui'
 
 /** Conversations of the acting actor. `openConversationId` opens one; `openWithActor` opens (or creates) a direct one. */
 const props = defineProps<{ openConversationId?: string | null; openWithActor?: string | null }>()
@@ -26,7 +26,7 @@ async function loadList() {
   try {
     conversations.value = await chat.list()
   } catch (e) {
-    notify(errorText(e, ui.lang))
+    notify(errorText(e))
   }
 }
 
@@ -61,7 +61,7 @@ async function openWith(actorId: string) {
     await loadList()
     await open(c.id)
   } catch (e) {
-    notify(errorText(e, ui.lang))
+    notify(errorText(e))
   }
 }
 
@@ -75,7 +75,7 @@ async function send() {
     await loadMessages(true)
     await loadList()
   } catch (e) {
-    notify(errorText(e, ui.lang))
+    notify(errorText(e))
   } finally {
     sending.value = false
   }
@@ -105,16 +105,16 @@ watch(() => session.state.activeActorId, () => {
 <template>
   <section class="card overflow-hidden">
     <div class="border-b border-slate-200 p-4 dark:border-slate-800">
-      <h1 class="text-xl font-extrabold">{{ tr('پیام‌ها', 'Messages') }}</h1>
-      <p v-if="session.signedIn.value" class="soft text-xs">{{ tr('اکنون به‌عنوان', 'Acting as') }} <b>{{ session.active.value?.display_name }}</b></p>
+      <h1 class="text-xl font-extrabold">{{ tr('chat.messages') }}</h1>
+      <p v-if="session.signedIn.value" class="soft text-xs">{{ tr('common.acting_as') }} <b>{{ session.active.value?.display_name }}</b></p>
     </div>
     <div v-if="!session.signedIn.value" class="space-y-3 p-8 text-center">
-      <p class="soft text-sm">{{ tr('برای پیام دادن وارد شوید.', 'Log in to send messages.') }}</p>
-      <button class="v3-primary !w-auto px-6" @click="emit('login')">{{ tr('ورود', 'Log in') }}</button>
+      <p class="soft text-sm">{{ tr('chat.log_in_to_send_messages') }}</p>
+      <button class="v3-primary !w-auto px-6" @click="emit('login')">{{ tr('common.log_in') }}</button>
     </div>
     <div v-else class="grid min-h-[480px] md:grid-cols-[260px_1fr]">
       <aside class="border-slate-200 md:border-e dark:border-slate-800" :class="currentId ? 'hidden md:block' : ''">
-        <p v-if="!conversations.length" class="soft p-6 text-center text-sm">{{ tr('هنوز گفت‌وگویی نیست. از پروفایل یا سفارش پیام بدهید.', 'No conversations yet. Message someone from a profile or an order.') }}</p>
+        <p v-if="!conversations.length" class="soft p-6 text-center text-sm">{{ tr('chat.no_conversations_yet_message_someone_from') }}</p>
         <button v-for="c in conversations" :key="c.id" class="flex w-full items-center gap-3 border-b border-slate-100 p-3 text-start hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800" :class="c.id === currentId ? 'bg-blue-50 dark:bg-slate-800' : ''" @click="open(c.id)">
           <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-blue-100 font-bold text-blue-700">{{ c.other.display_name.slice(0, 1) }}</span>
           <span class="min-w-0 flex-1">
@@ -127,12 +127,12 @@ watch(() => session.state.activeActorId, () => {
       <div class="flex min-h-[480px] flex-col" :class="currentId ? '' : 'hidden md:flex'">
         <template v-if="currentId">
           <div class="flex items-center gap-2 border-b border-slate-200 p-3 dark:border-slate-800">
-            <button class="md:hidden" :aria-label="tr('بازگشت', 'Back')" @click="currentId = null"><ChevronLeft :size="22" /></button>
+            <button class="md:hidden" :aria-label="tr('chat.back')" @click="currentId = null"><ChevronLeft :size="22" /></button>
             <strong>{{ current()?.other.display_name }}</strong>
             <span v-if="current()?.order_title" class="soft truncate text-xs">· {{ current()?.order_title }}</span>
           </div>
           <div ref="scroller" class="max-h-[55vh] min-h-[320px] flex-1 space-y-2 overflow-y-auto p-4">
-            <p v-if="!messages.length" class="soft text-center text-sm">{{ tr('اولین پیام را بفرستید.', 'Send the first message.') }}</p>
+            <p v-if="!messages.length" class="soft text-center text-sm">{{ tr('chat.send_the_first_message') }}</p>
             <div v-for="m in ordered()" :key="m.id" class="flex" :class="m.mine ? 'justify-start' : 'justify-end'">
               <div class="max-w-[80%] rounded-2xl px-4 py-2 text-sm leading-7" :class="m.mine ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800'">
                 <p class="whitespace-pre-wrap break-words">{{ m.body }}</p>
@@ -141,11 +141,11 @@ watch(() => session.state.activeActorId, () => {
             </div>
           </div>
           <form class="flex gap-2 border-t border-slate-200 p-3 dark:border-slate-800" @submit.prevent="send">
-            <input v-model="draft" maxlength="2000" class="v3-input min-w-0 flex-1" :placeholder="tr('پیام...', 'Message...')" />
-            <button :disabled="sending || !draft.trim()" class="v3-primary !w-auto px-4 disabled:opacity-50" :aria-label="tr('ارسال', 'Send')"><Send :size="18" /></button>
+            <input v-model="draft" maxlength="2000" class="v3-input min-w-0 flex-1" :placeholder="tr('chat.message')" />
+            <button :disabled="sending || !draft.trim()" class="v3-primary !w-auto px-4 disabled:opacity-50" :aria-label="tr('chat.send')"><Send :size="18" /></button>
           </form>
         </template>
-        <p v-else class="soft m-auto p-6 text-center text-sm">{{ tr('یک گفت‌وگو را انتخاب کنید.', 'Choose a conversation.') }}</p>
+        <p v-else class="soft m-auto p-6 text-center text-sm">{{ tr('chat.choose_a_conversation') }}</p>
       </div>
     </div>
   </section>

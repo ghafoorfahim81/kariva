@@ -73,4 +73,3 @@ Verified in a real browser with two users: request, price, accept (price locked)
 
 - Photos and voice in messages, order attachments.
 - Reports from the profile page. Block user stays in the later phase (`blocks` is not an MVP table).
-- Translation keys: the new screens use `tr(fa, en)`; Pashto falls back to Dari until the texts are written.
