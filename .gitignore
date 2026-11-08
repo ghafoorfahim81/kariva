@@ -23,3 +23,16 @@ Thumbs.db
 
 # Claude Code local settings
 .claude/
+
+# Redis dump
+dump.rdb
+*.rdb
+
+# Laravel / PHP local files
+.phpunit.cache/
+.phpunit.result.cache
+auth.json
+
+# Local databases
+*.sqlite
+*.sqlite-journal

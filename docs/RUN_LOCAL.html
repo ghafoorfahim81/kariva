@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>راهنمای اجرای کاریوا روی کامپیوتر</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  body { font-family: "Vazirmatn", "Segoe UI", Tahoma, Arial, sans-serif; font-size: 12.5pt; line-height: 1.9; color: #1a1a1a; }
+  h1 { font-size: 22pt; margin: 0 0 4px; color: #0f5132; }
+  h2 { font-size: 16pt; margin: 26px 0 6px; padding-bottom: 4px; border-bottom: 2px solid #0f5132; color: #0f5132; }
+  h3 { font-size: 13.5pt; margin: 16px 0 4px; }
+  p, li { margin: 4px 0; }
+  .sub { color: #555; margin-bottom: 14px; }
+  pre, code { direction: ltr; unicode-bidi: plaintext; font-family: Consolas, "Courier New", monospace; }
+  pre { background: #f3f4f6; border: 1px solid #d9dce1; border-radius: 6px; padding: 8px 12px; text-align: left; font-size: 10.5pt; line-height: 1.55; white-space: pre-wrap; margin: 6px 0; page-break-inside: avoid; }
+  code { background: #eef0f3; padding: 0 4px; border-radius: 3px; font-size: 10.5pt; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 11.5pt; }
+  th, td { border: 1px solid #cfd3d9; padding: 5px 8px; text-align: right; vertical-align: top; }
+  th { background: #e8f1ec; }
+  .note { background: #fff8e1; border-right: 4px solid #f0b429; padding: 6px 12px; margin: 10px 0; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<h1>راهنمای اجرای کاریوا (Kariva) روی کامپیوتر</h1>
+<div class="sub">دو روش: با Laravel Herd (آدرس <code>backend.test</code>) یا با <code>php artisan serve</code> (آدرس <code>localhost:8000</code>)</div>
+
+<h2>۱. نیازمندی‌ها</h2>
+<table>
+<tr><th>ابزار</th><th>توضیح</th></tr>
+<tr><td>PHP 8.3 یا بالاتر</td><td>با extensionهای <code>pdo_pgsql</code>، <code>pgsql</code>، <code>intl</code> (و <code>redis</code> فقط اگر Redis استفاده می‌کنید). در Herd همه از قبل هست، جز <code>pdo_pgsql</code> که شاید لازم باشد فعال شود.</td></tr>
+<tr><td>Composer</td><td>برای نصب بستهٔ PHP</td></tr>
+<tr><td>Node.js 20 یا بالاتر</td><td>برای فرانت (Vite)</td></tr>
+<tr><td>PostgreSQL 16 یا بالاتر</td><td>با extension به نام <code>pg_trgm</code> (جزو extensionهای استاندارد است)</td></tr>
+<tr><td>Redis</td><td><b>برای کار محلی لازم نیست</b>. فقط روی سرور اصلی لازم است (بخش ۸ را ببینید).</td></tr>
+</table>
+
+<h2>۲. راه‌اندازی مشترک (برای هر دو روش)</h2>
+
+<h3>الف) دیتابیس</h3>
+<p>در pgAdmin یا <code>psql</code> دو دیتابیس بسازید (کاربر و رمز دلخواه، فقط باید با <code>.env</code> یکی باشد):</p>
+<pre>CREATE ROLE kariva LOGIN SUPERUSER PASSWORD 'kariva';
+CREATE DATABASE kariva OWNER kariva;
+CREATE DATABASE kariva_test OWNER kariva;</pre>
+<p>اگر از کاربر <code>postgres</code> استفاده می‌کنید، در مرحلهٔ بعد همان را در <code>.env</code> بگذارید.</p>
+
+<h3>ب) بک‌اند</h3>
+<pre>cd backend
+composer install
+copy .env.example .env        (در PowerShell: Copy-Item .env.example .env)
+php artisan key:generate</pre>
+<p>سپس در <code>backend/.env</code> این مقدارها را برای کار محلی تنظیم کنید (بدون Redis):</p>
+<pre>DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=kariva
+DB_USERNAME=kariva
+DB_PASSWORD=kariva
+
+SESSION_DRIVER=file
+CACHE_STORE=file
+QUEUE_CONNECTION=sync</pre>
+<pre>php artisan config:clear
+php artisan migrate --seed</pre>
+<p>این دستور ۳۰ جدول و دادهٔ اولیه (۳۴ ولایت، شهرها و دسته‌بندی‌ها) را می‌سازد.</p>
+<div class="note">فایل <code>.env</code> رمز و تنظیمات شخصی شما را دارد و در git نمی‌رود. در گیت فقط <code>.env.example</code> هست.</div>
+
+<h2>۳. روش اول: با Laravel Herd</h2>
+<ol>
+<li>Herd را باز کنید و در بخش Sites با Add پوشهٔ <code>E:\kariva\backend</code> را اضافه کنید (پوشهٔ بک‌اند، نه پوشهٔ اصلی پروژه).</li>
+<li>سایت <code>backend.test</code> ساخته می‌شود. نسخهٔ PHP را 8.3 یا 8.4 بگذارید.</li>
+<li>در PHP > php.ini (در Herd) خط‌های <code>extension=pdo_pgsql</code> و <code>extension=pgsql</code> را از حالت کامنت دربیاورید و Herd را دوباره راه بیندازید.</li>
+<li>بررسی کنید: آدرس <code>http://backend.test/api/v1/health</code> باید <code>{"status":"ok"}</code> بدهد.</li>
+<li>فرانت را در ترمینال جدا اجرا کنید و پروکسی را به Herd بدهید:</li>
+</ol>
+<pre>cd kariva-v4.8
+npm install
+$env:KARIVA_API="http://backend.test"; npm run dev</pre>
+<p>سپس <code>http://localhost:5173</code> را باز کنید. دستور بالا مخصوص PowerShell است؛ در CMD از <code>set KARIVA_API=http://backend.test</code> و بعد <code>npm run dev</code> استفاده کنید.</p>
+<div class="note">در Herd رایگان نیازی به <code>php artisan serve</code> نیست. Herd خودش سرور را روشن نگه می‌دارد.</div>
+
+<h2>۴. روش دوم: با php artisan serve</h2>
+<p>این روش بدون Herd هم کار می‌کند. دو ترمینال باز کنید.</p>
+<h3>ترمینال ۱: بک‌اند</h3>
+<pre>cd backend
+php artisan serve</pre>
+<p>API روی <code>http://127.0.0.1:8000/api/v1</code> بالا می‌آید.</p>
+<h3>ترمینال ۲: فرانت</h3>
+<pre>cd kariva-v4.8
+npm install
+npm run dev</pre>
+<p>چون پیش‌فرض پروکسی Vite همان <code>http://127.0.0.1:8000</code> است، متغیر <code>KARIVA_API</code> لازم نیست. فرانت روی <code>http://localhost:5173</code> باز می‌شود.</p>
+
+<h2>۵. مقایسهٔ دو روش</h2>
+<table>
+<tr><th></th><th>Herd</th><th>php artisan serve</th></tr>
+<tr><td>آدرس API</td><td>http://backend.test</td><td>http://127.0.0.1:8000</td></tr>
+<tr><td>آدرس فرانت</td><td colspan="2">http://localhost:5173 (در هر دو)</td></tr>
+<tr><td><code>KARIVA_API</code></td><td>لازم: <code>http://backend.test</code></td><td>لازم نیست</td></tr>
+<tr><td>روشن ماندن سرور</td><td>Herd خودش انجام می‌دهد</td><td>ترمینال باید باز بماند</td></tr>
+<tr><td>پورت 8000 آزاد باشد؟</td><td>لازم نیست</td><td>لازم است</td></tr>
+</table>
+<p>در هر دو روش مقدار <code>SANCTUM_STATEFUL_DOMAINS=localhost:5173,127.0.0.1:5173</code> در <code>.env</code> می‌ماند، چون مرورگر همیشه از آدرس 5173 با API حرف می‌زند و پروکسی Vite درخواست‌ها را می‌فرستد.</p>
+
+<h2>۶. کارهای بعد از اجرا</h2>
+<ul>
+<li>ساختن ادمین: <code>php artisan kariva:make-admin +93700000000</code> (شمارهٔ ثبت‌شده در سایت را بگذارید).</li>
+<li>اجرای تست‌ها: <code>php artisan test</code> (به دیتابیس <code>kariva_test</code> نیاز دارد).</li>
+<li>بررسی آمادگی برای سرور: <code>php artisan kariva:preflight</code>.</li>
+</ul>
+
+<h2>۷. خطاهای رایج</h2>
+<table>
+<tr><th>خطا</th><th>علت و راه‌حل</th></tr>
+<tr><td><code>RedisException: No connection could be made...</code></td><td>Redis روشن نیست. در <code>.env</code>: <code>SESSION_DRIVER=file</code>، <code>CACHE_STORE=file</code>، <code>QUEUE_CONNECTION=sync</code> و بعد <code>php artisan config:clear</code>.</td></tr>
+<tr><td>Driver [fileq] not supported (یا مشابه)</td><td>غلط املایی در <code>.env</code>. مقدار درست <code>file</code> است.</td></tr>
+<tr><td><code>could not find driver</code></td><td>extension <code>pdo_pgsql</code> در PHP فعال نیست (بخش ۳، مرحلهٔ ۳).</td></tr>
+<tr><td>connection refused روی پورت 5432</td><td>سرویس PostgreSQL روشن نیست، یا پورت/رمز در <code>.env</code> اشتباه است.</td></tr>
+<tr><td>تغییر <code>.env</code> اثر نکرد</td><td><code>php artisan config:clear</code> را بزنید.</td></tr>
+<tr><td>فرانت بالا می‌آید ولی داده نمی‌گیرد (502 یا 500 در <code>/api</code>)</td><td>بک‌اند در دسترس نیست. آدرس <code>/api/v1/health</code> را مستقیم باز کنید و <code>KARIVA_API</code> را با روش خود مطابقت بدهید.</td></tr>
+<tr><td>صفحهٔ اصلی <code>backend.test</code> خطا یا 404 می‌دهد</td><td>طبیعی است؛ بک‌اند فقط API است. از <code>/api/v1/health</code> استفاده کنید.</td></tr>
+</table>
+
+<h2>۸. Redis (فقط برای سرور اصلی)</h2>
+<p>در سرور اصلی Ubuntu، <code>.env</code> باید <code>SESSION_DRIVER=redis</code>، <code>CACHE_STORE=redis</code>، <code>QUEUE_CONNECTION=redis</code> داشته باشد و Redis روشن باشد. جزئیات در <code>docs/DEPLOY.md</code> است.</p>
+
+</body>
+</html>
