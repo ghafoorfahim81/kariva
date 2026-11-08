@@ -55,7 +55,7 @@ class SendOtp
     private function newCode(): string
     {
         $fake = config('kariva.otp.fake_code');
-        if ($fake !== null && ! app()->isProduction()) {
+        if (filled($fake) && ! app()->isProduction()) {
             return (string) $fake;
         }
 

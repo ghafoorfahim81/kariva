@@ -33,7 +33,11 @@ class StoreMedia
             throw new ApiException('verification.not_pending', 409);
         }
 
-        $mime = $file->getMimeType();   // detected from the content
+        try {
+            $mime = $file->getMimeType();   // detected from the content
+        } catch (\ErrorException) {
+            $mime = null;   // content that cannot be identified is refused, never a server error
+        }
         if (! in_array($mime, config('kariva.media.image_types'), true)) {
             throw new ApiException('media.invalid_type', 422);
         }

@@ -5,6 +5,7 @@ namespace Tests\Feature\Api;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\RateLimiter;
+use Symfony\Component\Process\ExecutableFinder;
 
 class OperationsTest extends ApiTestCase
 {
@@ -23,6 +24,14 @@ class OperationsTest extends ApiTestCase
     {
         File::deleteDirectory($this->dir);
         parent::tearDown();
+    }
+
+    /** The backup command calls the PostgreSQL client tools, which may not be on PATH on a developer machine. */
+    private function needsPostgresTools(): void
+    {
+        if ((new ExecutableFinder)->find('pg_dump') === null) {
+            $this->markTestSkipped('pg_dump is not on PATH.');
+        }
     }
 
     // ---------------------------------------------------------------- headers
@@ -82,6 +91,7 @@ class OperationsTest extends ApiTestCase
 
     public function test_the_scheduler_and_backup_checks_turn_green_when_their_jobs_run(): void
     {
+        $this->needsPostgresTools();
         $admin = $this->person(['is_platform_admin' => true]);
         Cache::forget('scheduler:heartbeat');
         Cache::forget('backup:last_success');
@@ -100,6 +110,7 @@ class OperationsTest extends ApiTestCase
 
     public function test_the_backup_writes_a_database_dump_and_a_files_archive(): void
     {
+        $this->needsPostgresTools();
         $this->artisan('kariva:backup')->assertSuccessful();
 
         $dumps = glob($this->dir.'/out/db-*.dump');
@@ -107,12 +118,15 @@ class OperationsTest extends ApiTestCase
         $this->assertCount(1, $dumps);
         $this->assertGreaterThan(1000, filesize($dumps[0]));
         $this->assertCount(1, $archives);
-        $this->assertSame(0700, fileperms($this->dir.'/out') & 0777);   // not readable by other users
+        if (PHP_OS_FAMILY !== 'Windows') {   // Windows has no POSIX permission bits
+            $this->assertSame(0700, fileperms($this->dir.'/out') & 0777);   // not readable by other users
+        }
         $this->assertNotNull(Cache::get('backup:last_success'));
     }
 
     public function test_the_dump_can_be_read_back_and_contains_the_data(): void
     {
+        $this->needsPostgresTools();
         $this->person(['phone_e164' => '+93771234567']);
         // the test runs inside a transaction, so commit-visible data is not in the dump; the schema must be.
         $this->artisan('kariva:backup', ['--skip-files' => true])->assertSuccessful();
@@ -127,6 +141,7 @@ class OperationsTest extends ApiTestCase
 
     public function test_old_backups_are_removed_and_recent_ones_kept(): void
     {
+        $this->needsPostgresTools();
         File::ensureDirectoryExists($this->dir.'/out', 0700);
         $old = $this->dir.'/out/db-20200101-000000.dump';
         $recent = $this->dir.'/out/db-20990101-000000.dump';

@@ -180,6 +180,26 @@ class AuthTest extends ApiTestCase
         $this->assertNotSame('123456', $this->otp->lastCode());
     }
 
+    public function test_an_empty_fake_code_setting_still_sends_a_real_code(): void
+    {
+        config(['kariva.otp.fake_code' => '']);   // what "OTP_FAKE_CODE=" in .env gives
+
+        $this->postJson('/api/v1/auth/otp', ['phone' => self::PHONE])->assertNoContent();
+
+        $this->assertMatchesRegularExpression('/^\d{'.config('kariva.otp.digits').'}$/', $this->otp->lastCode());
+    }
+
+    public function test_times_are_stored_as_utc_whatever_the_database_server_zone_is(): void
+    {
+        $this->assertSame('UTC', config('database.connections.pgsql.timezone'));
+        $this->assertSame('UTC', DB::selectOne('show timezone')->TimeZone);
+
+        $this->postJson('/api/v1/auth/otp', ['phone' => self::PHONE])->assertNoContent();
+
+        $ttl = DB::selectOne('select extract(epoch from expires_at - now()) as seconds from otp_codes')->seconds;
+        $this->assertEqualsWithDelta(config('kariva.otp.ttl_minutes') * 60, (float) $ttl, 60);
+    }
+
     public function test_a_suspended_or_deleted_user_cannot_log_in(): void
     {
         $suspended = $this->person(['status' => 'suspended']);
@@ -203,7 +223,7 @@ class AuthTest extends ApiTestCase
     public function test_the_browser_spa_gets_a_session_cookie_not_a_token(): void
     {
         $this->withHeaders(['Referer' => 'http://localhost:5173', 'Origin' => 'http://localhost:5173']);
-        $this->postJson('/api/v1/auth/otp', ['phone' => self::PHONE]);
+        $this->postJson('/api/v1/auth/otp', ['phone' => self::PHONE])->assertNoContent();
 
         $response = $this->postJson('/api/v1/auth/verify', ['phone' => self::PHONE, 'code' => $this->otp->lastCode()])->assertOk();
 
