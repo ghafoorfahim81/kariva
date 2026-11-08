@@ -72,6 +72,5 @@ Verified in a real browser with two users: request, price, accept (price locked)
 ## Not done yet
 
 - Photos and voice in messages, order attachments.
-- Block user, admin panel and verification screens (Phase 3), reports from the profile page.
-- The old demo code paths (posts, careers, old order state, demo admin) are still in `App.vue` but no longer reached by the screens above; removing them is part of the prototype clean-up.
+- Reports from the profile page. Block user stays in the later phase (`blocks` is not an MVP table).
 - Translation keys: the new screens use `tr(fa, en)`; Pashto falls back to Dari until the texts are written.

@@ -54,9 +54,8 @@ Orders, quotes, needs and offers, chat, notifications, reviews, admin panel, pos
 
 ## Still open
 
-- Translation keys for some new texts (Pashto and English are partly missing), UUID leftovers in demo data, removing old tabs.
-- The "services" and "work" discovery tabs still show prototype samples.
-- Orders, needs, chat, notifications, reviews, admin: Phase 2 onward.
+- Translation keys for some new texts (Pashto and English are partly missing).
+- The "services" and "work" discovery tabs and the prototype samples were removed; see `docs/PHASE3.md`, section 9.
 
 ## Development note: the queue worker
 
