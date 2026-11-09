@@ -59,10 +59,14 @@ DB_PASSWORD=kariva
 
 SESSION_DRIVER=file
 CACHE_STORE=file
-QUEUE_CONNECTION=sync</pre>
+QUEUE_CONNECTION=sync
+
+OTP_DRIVER=screen</pre>
+<p>با <code>OTP_DRIVER=screen</code> کد ورود مستقیماً روی فرم ورود نشان داده می‌شود — نیازی به SMS یا WhatsApp نیست.</p>
 <pre>php artisan config:clear
-php artisan migrate --seed</pre>
-<p>این دستور ۳۰ جدول و دادهٔ اولیه (۳۴ ولایت، شهرها و دسته‌بندی‌ها) را می‌سازد.</p>
+php artisan migrate --seed
+php artisan storage:link</pre>
+<p>دستور اول ۳۰ جدول و دادهٔ اولیه (۳۴ ولایت، شهرها و دسته‌بندی‌ها) را می‌سازد. دستور <code>storage:link</code> یک لینک سمبلیک می‌سازد که آپلود فایل‌ها روی مرورگر نمایان شود؛ بدون آن عکس‌های پروفایل باز نمی‌شوند.</p>
 <div class="note">فایل <code>.env</code> رمز و تنظیمات شخصی شما را دارد و در git نمی‌رود. در گیت فقط <code>.env.example</code> هست.</div>
 
 <h2>۳. روش اول: با Laravel Herd</h2>
@@ -108,6 +112,7 @@ npm run dev</pre>
 <li>اجرای تست‌ها: <code>php artisan test</code> (به دیتابیس <code>kariva_test</code> نیاز دارد).</li>
 <li>بررسی آمادگی برای سرور: <code>php artisan kariva:preflight</code>.</li>
 </ul>
+<div class="note"><b>نحوهٔ ورود در حالت محلی:</b> شماره‌تلفن را بزنید، کد ۶ رقمی روی همان فرم نمایان می‌شود؛ همان را وارد کنید. با هر شمارهٔ ایرانی (شروع با ۰۷) می‌توانید وارد شوید. کد‌ها در لاگ هم ثبت می‌شوند: <code>storage/logs/laravel.log</code></div>
 
 <h2>۷. خطاهای رایج</h2>
 <table>
@@ -119,6 +124,10 @@ npm run dev</pre>
 <tr><td>تغییر <code>.env</code> اثر نکرد</td><td><code>php artisan config:clear</code> را بزنید.</td></tr>
 <tr><td>فرانت بالا می‌آید ولی داده نمی‌گیرد (502 یا 500 در <code>/api</code>)</td><td>بک‌اند در دسترس نیست. آدرس <code>/api/v1/health</code> را مستقیم باز کنید و <code>KARIVA_API</code> را با روش خود مطابقت بدهید.</td></tr>
 <tr><td>صفحهٔ اصلی <code>backend.test</code> خطا یا 404 می‌دهد</td><td>طبیعی است؛ بک‌اند فقط API است. از <code>/api/v1/health</code> استفاده کنید.</td></tr>
+<tr><td>کد ورود نشان داده نمی‌شود</td><td>مطمئن شوید <code>OTP_DRIVER=screen</code> در <code>.env</code> باشد و بعد <code>php artisan config:clear</code> بزنید. اگر کد نشان نداد، لاگ را ببینید: <code>storage/logs/laravel.log</code></td></tr>
+<tr><td>خطا: «چند بار درخواست کد کرده‌اید»</td><td>به ازای هر شماره، در ساعت تعداد محدودی OTP مجاز است. یک ساعت صبر کنید یا یک شمارهٔ دیگر امتحان کنید.</td></tr>
+<tr><td><code>Duplicate key value violates unique constraint</code></td><td>Migration قبلاً اجرا شده. اگر می‌خواهید دوباره از صفر شروع کنید: <code>php artisan migrate:fresh --seed</code> (همهٔ داده‌ها حذف می‌شود).</td></tr>
+<tr><td>عکس‌ها بالا می‌آیند ولی نمایش داده نمی‌شوند</td><td><code>php artisan storage:link</code> را اجرا نکرده‌اید. یک بار آن را بزنید.</td></tr>
 </table>
 
 <h2>۸. Redis (فقط برای سرور اصلی)</h2>

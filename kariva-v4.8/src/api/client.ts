@@ -39,10 +39,7 @@ export async function api<T = unknown>(method: string, path: string, opts: { bod
 
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (activeActorId) headers['X-Actor-Id'] = activeActorId
-  if (method !== 'GET') {
-    await ensureCsrf()
-    headers['X-XSRF-TOKEN'] = xsrfToken()
-  }
+  if (method !== 'GET') await ensureCsrf()
 
   let body: BodyInit | undefined
   if (opts.form) body = opts.form
@@ -51,15 +48,22 @@ export async function api<T = unknown>(method: string, path: string, opts: { bod
     body = JSON.stringify(opts.body)
   }
 
-  const res = await fetch(url, { method, headers, body, credentials: 'include' })
-  if (res.status === 204) return undefined as T
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (method !== 'GET') headers['X-XSRF-TOKEN'] = xsrfToken()
+    const res = await fetch(url, { method, headers, body, credentials: 'include' })
+    if (res.status === 204) return undefined as T
 
-  const json = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    const { code, message, errors, ...rest } = json as Record<string, unknown>
-    throw new ApiError(res.status, (code as string) ?? (res.status === 422 ? 'validation' : String(message ?? 'error')), (errors as Record<string, string[]>) ?? {}, rest)
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      const { code, message, errors, ...rest } = json as Record<string, unknown>
+      // A CSRF mismatch clears the token so the next attempt fetches a fresh one.
+      if (res.status === 419 && attempt === 0) { csrfReady = false; await ensureCsrf(); continue }
+      throw new ApiError(res.status, (code as string) ?? (res.status === 422 ? 'validation' : String(message ?? 'error')), (errors as Record<string, string[]>) ?? {}, rest)
+    }
+    return json as T
   }
-  return json as T
+  /* istanbul ignore next */
+  throw new ApiError(500, 'error')
 }
 
 export const get = <T>(path: string, query?: Query) => api<T>('GET', path, { query })
